@@ -4,3 +4,337 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🌿 גן חכם</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ── AUTH SCREEN ───────────────────────────────── */
+    #auth-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(145deg, #0f2a1a 0%, #1a3d28 50%, #0f2a1a 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .auth-box {
+      background: #fff; border-radius: 24px; padding: 40px 36px 36px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .auth-logo {
+      text-align: center; font-size: 3rem; margin-bottom: 4px;
+    }
+    #auth-title {
+      text-align: center; font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.5rem; color: #0f2a1a; margin: 0;
+    }
+    .auth-subtitle {
+      text-align: center; color: #6b7280; font-size: 0.88rem; margin-top: -8px;
+    }
+    .auth-divider {
+      display: flex; align-items: center; gap: 12px; color: #9ca3af; font-size: 0.78rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: #e5e7eb;
+    }
+    .auth-inp {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #d1d5db;
+      border-radius: 12px; font-family: 'Heebo', sans-serif; font-size: 0.9rem;
+      outline: none; transition: border-color .2s; direction: rtl;
+    }
+    .auth-inp:focus { border-color: #2d6040; }
+    .auth-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      font-family: 'Heebo', sans-serif; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all .2s;
+    }
+    .auth-btn-primary {
+      background: linear-gradient(135deg, #2d6040, #4a8c5c);
+      color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .auth-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,96,64,0.35); }
+    .auth-btn-primary:disabled { opacity: 0.65; transform: none; }
+    .auth-btn-google {
+      background: #fff; color: #374151; border: 1.5px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .auth-btn-google:hover { background: #f9fafb; border-color: #d1d5db; }
+    .auth-spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #auth-error {
+      font-size: 0.82rem; text-align: center; display: none; padding: 8px 12px;
+      background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;
+    }
+    #auth-toggle { text-align: center; font-size: 0.83rem; color: #6b7280; }
+    #auth-toggle a { color: #2d6040; font-weight: 700; text-decoration: none; }
+    #auth-toggle a:hover { text-decoration: underline; }
+
+    /* ── APP SHELL ─────────────────────────────────── */
+    #app-shell { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  AUTH SCREEN                                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">🌿</div>
+    <h2 id="auth-title">🌿 ברוך הבא לגן חכם</h2>
+    <p class="auth-subtitle">נהל את הגינה שלך — גיזום, דישון, השקייה ועוד</p>
+
+    <!-- Google -->
+    <button class="auth-btn auth-btn-google" onclick="loginWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      כניסה עם Google
+    </button>
+
+    <div class="auth-divider">או</div>
+
+    <!-- Email + Password -->
+    <input class="auth-inp" type="email"    id="auth-email"    placeholder="כתובת אימייל">
+    <input class="auth-inp" type="password" id="auth-password" placeholder="סיסמה (לפחות 6 תווים)"
+           onkeydown="if(event.key==='Enter') onAuthSubmit()">
+
+    <div id="auth-error"></div>
+
+    <button class="auth-btn auth-btn-primary" id="auth-submit-btn" onclick="onAuthSubmit()">
+      <span id="auth-spinner" class="auth-spinner"></span>
+      כניסה
+    </button>
+
+    <p id="auth-toggle">אין חשבון? <a href="#" onclick="toggleAuthMode();return false">הירשם כאן</a></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!--  APP SHELL                                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="app-shell">
+
+<div class="header">
+  <div class="header-row">
+    <div class="header-title">
+      <h1>גן חכם 🌿<br><span>ניהול טיפולי הגינה שלך</span></h1>
+      <p>מעקב גיזום · דישון · תוספים · עונות</p>
+    </div>
+    <div class="header-meta">
+      <div id="user-header-info"></div>
+      <div class="month-pill" id="monthPill">📅 ...</div>
+      <button class="notif-bell" onclick="openAddPlant()" title="הוסף צמח" style="font-size:1.4rem">＋</button>
+      <button class="notif-bell" onclick="openNotif()">🔔<span class="notif-badge" id="nb">0</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="alerts-bar">
+  <span class="alerts-label">⚡ החודש:</span>
+  <div id="alertsBar"></div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-ttl">חיפוש</div>
+      <input class="sb-inp" type="text" id="srch" placeholder="🔍 חפש צמח..." oninput="render()">
+    </div>
+    <div class="sb-sec">
+      <div class="sb-ttl">סינון לפי חודש</div>
+      <select class="sb-inp" id="msel" onchange="onMC()">
+        <option value="0">כל החודשים</option>
+        <option value="1">ינואר</option><option value="2">פברואר</option><option value="3">מרץ</option>
+        <option value="4">אפריל</option><option value="5">מאי</option><option value="6">יוני</option>
+        <option value="7">יולי</option><option value="8">אוגוסט</option><option value="9">ספטמבר</option>
+        <option value="10">אוקטובר</option><option value="11">נובמבר</option><option value="12">דצמבר</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="sb-sec">
+      <div class="sb-ttl">סוג צמח</div>
+      <button class="flt on" onclick="setT('all',this)"><span class="dot" style="background:#6b7280"></span>כל הצמחים<span class="cnt" id="c-all"></span><span class="sb-badge" id="sb-all"></span></button>
+      <button class="flt" onclick="setT('fruit',this)"><span class="dot" style="background:#f59e0b"></span>עצי פרי<span class="cnt" id="c-fruit"></span><span class="sb-badge" id="sb-fruit"></span></button>
+      <button class="flt" onclick="setT('ornamental',this)"><span class="dot" style="background:#8b5cf6"></span>נוי<span class="cnt" id="c-ornamental"></span><span class="sb-badge" id="sb-ornamental"></span></button>
+      <button class="flt" onclick="setT('tropical',this)"><span class="dot" style="background:#10b981"></span>טרופי / עשבוני<span class="cnt" id="c-tropical"></span><span class="sb-badge" id="sb-tropical"></span></button>
+      <button class="flt" onclick="setT('bush',this)"><span class="dot" style="background:#ef4444"></span>שיחים<span class="cnt" id="c-bush"></span><span class="sb-badge" id="sb-bush"></span></button>
+      <button class="flt" onclick="setT('lawn',this)"><span class="dot" style="background:#22c55e"></span>דשא<span class="cnt" id="c-lawn"></span><span class="sb-badge" id="sb-lawn"></span></button>
+    </div>
+    <div class="divider"></div>
+    <button class="flt" onclick="setT('alerts',this)"><span style="font-size:.9rem">🔔</span>טיפולים החודש<span class="cnt" id="c-alerts" style="background:#fee2e2;color:#991b1b"></span><span class="sb-badge sb-badge-alert" id="sb-alerts"></span></button>
+    <div class="divider"></div>
+    <div class="sb-sec">
+      <div class="sb-ttl">תצוגה</div>
+      <button class="flt" id="floor-toggle" onclick="toggleFloors()">
+        <span style="font-size:.9rem">🏠</span>
+        <span id="floor-toggle-txt">בטל חלוקת קומות</span>
+      </button>
+    </div>
+  </div>
+  <div class="plants-area" id="pa"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="modal" style="position:relative">
+    <button class="m-close" onclick="closeModal()">✕</button>
+    <div class="m-photos" id="mPhotos"></div>
+    <div class="m-info">
+      <h2 id="mt"></h2>
+      <div class="sub" id="ms"></div>
+      <a id="wiki-link" href="#" target="_blank" rel="noopener" 
+         style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 13px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:100px;font-size:0.78rem;font-weight:700;color:#1a1a2e;text-decoration:none;transition:all .15s;"
+         onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+        <img src="https://en.wikipedia.org/static/images/icons/wikipedia.png" style="width:16px;height:16px;object-fit:contain" onerror="this.style.display='none'">
+        ויקיפדיה
+      </a>
+    </div>
+    <div class="modal-actions">
+      <button class="edit-btn" id="modal-edit-btn" onclick="toggleEditMode()">✏️ ערוך פרטים</button>
+    </div>
+    <div class="mseasons" id="mseasons"></div>
+    <div class="mbody" id="mbody"></div>
+    <div class="modal-bottom-btns">
+      <button class="reset-btn" onclick="confirmResetPlant()">↺ חזור למצב ראשוני</button>
+      <button class="delete-plant-btn" onclick="confirmDeleteFromModal()">🗑️ מחק צמח</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIF -->
+<div class="notif-overlay-bg" id="no" onclick="closeNotif()"></div>
+<div class="notif-panel" id="np">
+  <div class="np-hdr">
+    <h3>🔔 לוח התראות</h3>
+    <p>טיפולי הגינה לשלושת החודשים הקרובים</p>
+    <button class="np-close" onclick="closeNotif()">✕</button>
+  </div>
+  <div class="np-body" id="npb"></div>
+  <div class="np-foot">
+    <p>קבל תזכורות ישירות לטלפון שלך</p>
+    <button class="btn-sub" onclick="subPush()">🔔 הפעל התראות Push</button>
+  </div>
+</div>
+
+<!-- PHOTO EDITOR PANEL -->
+<div class="notif-overlay-bg" id="pe-bg" onclick="closePhotoEditor()"></div>
+<div class="pe-panel" id="pe-panel">
+  <div class="pe-hdr">
+    <div>
+      <h3>📷 עריכת תמונה</h3>
+      <p id="pe-subtitle">בחר שלב גדילה</p>
+    </div>
+    <button class="np-close" onclick="closePhotoEditor()">✕</button>
+  </div>
+  <div class="pe-body">
+    <div class="pe-size-tabs" id="pe-size-tabs"></div>
+    <div class="pe-current-img-wrap">
+      <div class="pe-current-bg" id="pe-current-bg">
+        <div class="pe-current-emoji" id="pe-current-emoji"></div>
+        <div class="pe-no-img-txt">אין תמונה</div>
+      </div>
+      <img class="pe-current-img" id="pe-current-img" src="" alt="" onerror="this.style.display='none'">
+    </div>
+
+    <div class="pe-options">
+      <!-- Option 1: Upload from computer -->
+      <div class="pe-opt" onclick="document.getElementById('pe-file-input').click()">
+        <div class="pe-opt-icon">📁</div>
+        <div class="pe-opt-body">
+          <div class="pe-opt-title">העלאה מהמחשב</div>
+          <div class="pe-opt-desc">בחר תמונה מהקבצים שלך</div>
+        </div>
+      </div>
+      <input type="file" id="pe-file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
+
+      <!-- Option 2: Paste from clipboard -->
+      <div class="pe-opt" id="pe-paste-btn" onclick="pasteFromClipboard()">
+        <div class="pe-opt-icon">📋</div>
+        <div class="pe-opt-body">
+          <div class="pe-opt-title">הדבק מהלוח</div>
+          <div class="pe-opt-desc">Ctrl+V או לחץ כאן לאחר העתקת תמונה</div>
+        </div>
+      </div>
+
+      <!-- Option 3: URL -->
+      <div class="pe-opt pe-opt-url">
+        <div class="pe-opt-icon">🔗</div>
+        <div class="pe-opt-body" style="flex:1">
+          <div class="pe-opt-title">קישור לתמונה (URL)</div>
+          <input type="text" id="pe-url-input" class="pe-url-inp" placeholder="https://example.com/photo.jpg" oninput="previewUrl(this.value)">
+          <button class="pe-url-btn" onclick="saveUrlImg()">שמור קישור</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pe-paste-zone" id="pe-paste-zone" 
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event)">
+      <div style="font-size:2.5rem">🖼️</div>
+      <div>גרור תמונה לכאן, או הדבק עם Ctrl+V</div>
+    </div>
+
+    <div class="pe-preview-wrap" id="pe-preview-wrap" style="display:none">
+      <div class="pe-preview-title">תצוגה מקדימה:</div>
+      <img class="pe-preview" id="pe-preview" src="" alt="">
+      <div class="pe-preview-btns">
+        <button class="btn-save-img" onclick="savePhotoEdit()">✅ שמור תמונה</button>
+        <button class="btn-cancel-img" onclick="cancelPreview()">✕ בטל</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PLANT PANEL -->
+<div class="notif-overlay-bg" id="ap-bg" onclick="closeAddPlant()"></div>
+<div class="ap-panel" id="ap-panel">
+  <div class="pe-hdr" style="background:linear-gradient(135deg,#052e16,#14532d)">
+    <div>
+      <h3>🌱 הוסף צמח חדש</h3>
+      <p>הקלד שם ו-AI יסווג אוטומטית</p>
+    </div>
+    <button class="np-close" onclick="closeAddPlant()">✕</button>
+  </div>
+  <div class="pe-body">
+    <div class="ap-ac-wrap">
+      <div class="ap-input-row">
+        <input type="text" id="ap-name-input" class="ap-name-inp" 
+          placeholder="הקלד שם צמח... (עברית/אנגלית)" 
+          oninput="onAPInput(this.value)"
+          onkeydown="onAPKey(event)"
+          autocomplete="off">
+        <button class="ap-classify-btn" onclick="classifyPlant()" id="ap-classify-btn">
+          <span id="ap-btn-txt">✨ הוסף</span>
+        </button>
+      </div>
+      <div class="ap-ac-dropdown" id="ap-ac-dropdown"></div>
+    </div>
+    <div class="ap-hint">💡 הקלד לפחות 2 אותיות — המערכת תציע צמחים דומים מיד, או לחץ ✨ הוסף להגדרה ידנית עם AI</div>
+
+    <!-- AI Result -->
+    <div id="ap-result" style="display:none">
+      <div class="ap-result-card" id="ap-result-card"></div>
+      <div class="ap-result-btns">
+        <button class="btn-save-img" onclick="confirmAddPlant()">✅ הוסף לגינה</button>
+        <button class="btn-cancel-img" onclick="document.getElementById('ap-result').style.display='none'">✕ בטל</button>
+      </div>
+    </div>
+
+    <div class="ap-loading" id="ap-loading" style="display:none">
+      <div class="spin" style="width:32px;height:32px;border-width:3px;border-color:rgba(21,128,61,0.2);border-top-color:#15803d;"></div>
+      <div style="margin-top:10px;color:#4a6a4a;font-size:0.88rem">Claude מנתח את הצמח...</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app-shell -->
+
+<!-- App Script -->
+<script src="script2.js"></script>
+</body>
+</html>
