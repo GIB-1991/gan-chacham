@@ -9,7 +9,7 @@
   if (authSubmitBtn) authSubmitBtn.disabled = true;
   if (googleBtn) googleBtn.disabled = true;
 
-  mainScript.src = 'script.js?v=auth-care-fix-20260503';
+  mainScript.src = 'script.js?v=auth-submit-fix-20260503';
   mainScript.onload = installCareLogFix;
   mainScript.onerror = function () {
     console.error('Failed to load script.js');
@@ -86,6 +86,19 @@ function installCareLogFix() {
       console.error('loginWithEmail:', e);
       showAuthError('לא הצלחנו להשלים התחברות. נסה שוב בעוד רגע.');
     }
+  };
+
+  window.onAuthSubmit = function patchedOnAuthSubmit() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+
+    if (!email || !password) {
+      showAuthError('יש להזין אימייל וסיסמה');
+      return;
+    }
+
+    if (authMode === 'login') loginWithEmail(email, password);
+    else registerWithEmail(email, password);
   };
 
   window.onUserLoggedIn = async function patchedOnUserLoggedIn() {
