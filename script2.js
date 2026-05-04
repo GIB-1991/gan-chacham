@@ -9,7 +9,7 @@
   if (authSubmitBtn) authSubmitBtn.disabled = true;
   if (googleBtn) googleBtn.disabled = true;
 
-  mainScript.src = 'script.js?v=auth-submit-fix-20260503';
+  mainScript.src = 'script.js?v=google-auth-fix-20260504';
   mainScript.onload = installCareLogFix;
   mainScript.onerror = function () {
     console.error('Failed to load script.js');
@@ -37,6 +37,7 @@ function installCareLogFix() {
   const originalShowAuthError = window.showAuthError;
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const googleBtn = document.querySelector('.auth-btn-google');
+  let enteringApp = false;
 
   if (authSubmitBtn) authSubmitBtn.disabled = false;
   if (googleBtn) googleBtn.disabled = false;
@@ -55,15 +56,29 @@ function installCareLogFix() {
   };
 
   window.loginWithGoogle = async function patchedLoginWithGoogle() {
-    if (!_db) return;
+    if (!_db) {
+      showAuthError('החיבור ל-Supabase עדיין לא מוכן. נסה שוב בעוד רגע.');
+      return;
+    }
 
-    const redirectTo = `${window.location.origin}${window.location.pathname}`;
-    const { error } = await _db.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo }
-    });
+    try {
+      const returnUrl = new URL(window.location.href);
+      returnUrl.search = '';
+      returnUrl.hash = '';
 
-    if (error) showAuthError('שגיאת התחברות: ' + error.message);
+      const { error } = await _db.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: returnUrl.toString(),
+          queryParams: { prompt: 'select_account' }
+        }
+      });
+
+      if (error) showAuthError('שגיאת התחברות עם Google: ' + error.message);
+    } catch (e) {
+      console.error('loginWithGoogle:', e);
+      showAuthError('לא הצלחנו לפתוח התחברות עם Google. נסה שוב בעוד רגע.');
+    }
   };
 
   window.loginWithEmail = async function patchedLoginWithEmail(email, password) {
@@ -102,61 +117,128 @@ function installCareLogFix() {
   };
 
   window.onUserLoggedIn = async function patchedOnUserLoggedIn() {
+    if (enteringApp) return;
+    enteringApp = true;
+
     try {
-      currentUser = currentUser || (await _db.auth.getUser()).data.user;
-    } catch (e) {
-      console.error('getUser:', e);
+      try {
+        currentUser = currentUser || (await _db.auth.getUser()).data.user;
+      } catch (e) {
+        console.error('getUser:', e);
+      }
+
+      if (!currentUser) {
+        showAuthScreen();
+        return;
+      }
+
+      renderUserHeader(currentUser);
+      hideAuthScreen();
+      showToast('טוען את הגינה שלך...');
+
+      let dbPlants = null;
+      let dbDates = {};
+
+      try {
+        [dbPlants, dbDates] = await Promise.all([dbLoadPlants(), dbLoadPlantingDates()]);
+      } catch (e) {
+        console.error('load garden data:', e);
+        showToast('חלק מהנתונים לא נטענו, אבל אפשר להמשיך לעבוד.');
+      }
+
+      try {
+        await dbLoadCareLog();
+      } catch (e) {
+        console.error('load care log:', e);
+      }
+
+      if (dbPlants !== null) {
+        P.length = 0;
+        if (dbPlants.length > 0) {
+          dbPlants.forEach(p => P.push(p));
+        } else {
+          const CATALOG = getAllCatalogPlants();
+          const defaultNames = ['לימון ננסי', 'תפוז טבורי', 'אורן ירושליים', 'נענע'];
+          const seeds = defaultNames.map(n => CATALOG.find(p => p.name === n)).filter(Boolean);
+          for (const p of seeds) {
+            P.push(p);
+            await dbSavePlant(p);
+          }
+        }
+      }
+
+      if (dbDates) Object.assign(plantingDates, dbDates);
+
+      document.getElementById('monthPill').textContent = `📅 ${MHE[CUR - 1]} ${NOW.getFullYear()}`;
+      document.getElementById('msel').value = 0;
+      updCounts();
+      renderAlerts();
+      render();
+      showToast('הגינה נטענה בהצלחה!');
+    } finally {
+      enteringApp = false;
+    }
+  };
+
+  function cleanAuthUrl() {
+    const clean = `${window.location.origin}${window.location.pathname}`;
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, clean);
+    }
+  }
+
+  function readAuthError() {
+    const sources = [
+      new URLSearchParams(window.location.search),
+      new URLSearchParams(window.location.hash.replace(/^#/, ''))
+    ];
+
+    for (const params of sources) {
+      const msg = params.get('error_description') || params.get('error');
+      if (msg) return decodeURIComponent(msg.replace(/\+/g, ' '));
     }
 
-    if (!currentUser) {
-      showAuthScreen();
+    return '';
+  }
+
+  async function resumeOAuthSession() {
+    if (!_db) return;
+
+    const authError = readAuthError();
+    if (authError) {
+      showAuthError('Google החזיר שגיאה: ' + authError);
+      cleanAuthUrl();
       return;
     }
 
-    renderUserHeader(currentUser);
-    hideAuthScreen();
-    showToast('טוען את הגינה שלך...');
-
-    let dbPlants = null;
-    let dbDates = {};
-
     try {
-      [dbPlants, dbDates] = await Promise.all([dbLoadPlants(), dbLoadPlantingDates()]);
-    } catch (e) {
-      console.error('load garden data:', e);
-      showToast('חלק מהנתונים לא נטענו, אבל אפשר להמשיך לעבוד.');
-    }
-
-    try {
-      await dbLoadCareLog();
-    } catch (e) {
-      console.error('load care log:', e);
-    }
-
-    if (dbPlants !== null) {
-      P.length = 0;
-      if (dbPlants.length > 0) {
-        dbPlants.forEach(p => P.push(p));
-      } else {
-        const CATALOG = getAllCatalogPlants();
-        const defaultNames = ['לימון ננסי', 'תפוז טבורי', 'אורן ירושליים', 'נענע'];
-        const seeds = defaultNames.map(n => CATALOG.find(p => p.name === n)).filter(Boolean);
-        for (const p of seeds) {
-          P.push(p);
-          await dbSavePlant(p);
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code && typeof _db.auth.exchangeCodeForSession === 'function') {
+        const { error } = await _db.auth.exchangeCodeForSession(code);
+        if (error) {
+          showAuthError('לא הצלחנו להשלים התחברות עם Google: ' + error.message);
+          return;
         }
+        cleanAuthUrl();
       }
+
+      const { data, error } = await _db.auth.getSession();
+      if (error) {
+        console.error('getSession:', error.message);
+        return;
+      }
+
+      if (data?.session?.user) {
+        currentUser = data.session.user;
+        await onUserLoggedIn();
+      }
+    } catch (e) {
+      console.error('resumeOAuthSession:', e);
+      showAuthError('לא הצלחנו לחזור מהתחברות Google. נסה שוב.');
     }
+  }
 
-    if (dbDates) Object.assign(plantingDates, dbDates);
-
-    document.getElementById('monthPill').textContent = `📅 ${MHE[CUR - 1]} ${NOW.getFullYear()}`;
-    document.getElementById('msel').value = 0;
-    updCounts();
-    renderAlerts();
-    render();
-    showToast('הגינה נטענה בהצלחה!');
-  };
+  setTimeout(resumeOAuthSession, 0);
 
   function careStorageKey(key) {
     return currentUser ? `care_${currentUser.id}_${key}` : `care_${key}`;
