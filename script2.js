@@ -9,8 +9,8 @@
   if (authSubmitBtn) authSubmitBtn.disabled = true;
   if (googleBtn) googleBtn.disabled = true;
 
-  mainScript.src = 'script.js?v=google-auth-fix-20260504';
-  mainScript.onload = installCareLogFix;
+  mainScript.src = 'script.js?v=google-auth-fix-20260505';
+  mainScript.onload = installRuntimeFixes;
   mainScript.onerror = function () {
     console.error('Failed to load script.js');
     showAppLoadingError('לא ניתן לטעון את האפליקציה. נסה לרענן את הדף.');
@@ -33,11 +33,12 @@ function showAppLoadingError(msg = 'האפליקציה עדיין נטענת. נ
   el.style.display = 'block';
 }
 
-function installCareLogFix() {
+function installRuntimeFixes() {
   const originalShowAuthError = window.showAuthError;
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const googleBtn = document.querySelector('.auth-btn-google');
   let enteringApp = false;
+  let localMode = false;
 
   if (authSubmitBtn) authSubmitBtn.disabled = false;
   if (googleBtn) googleBtn.disabled = false;
@@ -55,9 +56,49 @@ function installCareLogFix() {
     el.style.display = 'block';
   };
 
+  async function supabaseReachable(timeoutMs = 3500) {
+    if (typeof SUPABASE_URL === 'undefined') return false;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: ctrl.signal
+      });
+      return true;
+    } catch (e) {
+      console.error('supabaseReachable:', e);
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function enterLocalMode(reason) {
+    localMode = true;
+    try { _db = null; } catch (e) {}
+    try { currentUser = { id: 'local-offline', email: 'מצב מקומי' }; } catch (e) {}
+
+    hideAuthScreen();
+    renderUserHeader(currentUser);
+    document.getElementById('monthPill').textContent = `📅 ${MHE[CUR - 1]} ${NOW.getFullYear()}`;
+    document.getElementById('msel').value = 0;
+    updCounts();
+    renderAlerts();
+    render();
+    showToast(reason || 'האפליקציה נפתחה במצב מקומי');
+  }
+
   window.loginWithGoogle = async function patchedLoginWithGoogle() {
     if (!_db) {
-      showAuthError('החיבור ל-Supabase עדיין לא מוכן. נסה שוב בעוד רגע.');
+      enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
+      return;
+    }
+
+    const reachable = await supabaseReachable();
+    if (!reachable) {
+      enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
       return;
     }
 
@@ -82,7 +123,10 @@ function installCareLogFix() {
   };
 
   window.loginWithEmail = async function patchedLoginWithEmail(email, password) {
-    if (!_db) return;
+    if (!_db) {
+      enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
+      return;
+    }
 
     try {
       setAuthLoading(true);
@@ -99,7 +143,7 @@ function installCareLogFix() {
     } catch (e) {
       setAuthLoading(false);
       console.error('loginWithEmail:', e);
-      showAuthError('לא הצלחנו להשלים התחברות. נסה שוב בעוד רגע.');
+      enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
     }
   };
 
@@ -202,7 +246,7 @@ function installCareLogFix() {
   }
 
   async function resumeOAuthSession() {
-    if (!_db) return;
+    if (!_db || localMode) return;
 
     const authError = readAuthError();
     if (authError) {
@@ -234,11 +278,17 @@ function installCareLogFix() {
       }
     } catch (e) {
       console.error('resumeOAuthSession:', e);
-      showAuthError('לא הצלחנו לחזור מהתחברות Google. נסה שוב.');
+      enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
     }
   }
 
-  setTimeout(resumeOAuthSession, 0);
+  setTimeout(async function startAuthRecovery() {
+    if (_db && !(await supabaseReachable())) {
+      enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
+      return;
+    }
+    await resumeOAuthSession();
+  }, 0);
 
   function careStorageKey(key) {
     return currentUser ? `care_${currentUser.id}_${key}` : `care_${key}`;
@@ -260,7 +310,7 @@ function installCareLogFix() {
       if (legacyKey !== storageKey) localStorage.removeItem(legacyKey);
     }
 
-    if (!_db || !currentUser) return;
+    if (!_db || !currentUser || localMode) return;
 
     try {
       const { error: deleteError } = await _db.from('care_log').delete()
@@ -303,7 +353,7 @@ function installCareLogFix() {
       }
     }
 
-    if (!_db || !currentUser) return;
+    if (!_db || !currentUser || localMode) return;
 
     try {
       const { data, error } = await _db.from('care_log').select('key')
