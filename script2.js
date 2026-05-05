@@ -9,7 +9,7 @@
   if (authSubmitBtn) authSubmitBtn.disabled = true;
   if (googleBtn) googleBtn.disabled = true;
 
-  mainScript.src = 'script.js?v=google-auth-fix-20260505';
+  mainScript.src = 'script.js?v=local-save-fix-20260505';
   mainScript.onload = installRuntimeFixes;
   mainScript.onerror = function () {
     console.error('Failed to load script.js');
@@ -37,6 +37,21 @@ function installRuntimeFixes() {
   const originalShowAuthError = window.showAuthError;
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const googleBtn = document.querySelector('.auth-btn-google');
+  const cloud = {
+    dbSavePlant: window.dbSavePlant,
+    dbDeletePlant: window.dbDeletePlant,
+    dbLoadPlants: window.dbLoadPlants,
+    dbSavePlantingDate: window.dbSavePlantingDate,
+    dbDeletePlantingDate: window.dbDeletePlantingDate,
+    dbLoadPlantingDates: window.dbLoadPlantingDates,
+    saveAge: window.saveAge,
+    clearAge: window.clearAge,
+    savePhotoEdit: window.savePhotoEdit,
+    confirmResetPlant: window.confirmResetPlant
+  };
+  const LOCAL_PLANTS_KEY = 'gan_chacham_local_plants_v2';
+  const LOCAL_DATES_KEY = 'gan_chacham_local_planting_dates_v2';
+  const LOCAL_IMAGES_KEY = 'gan_chacham_local_images_v2';
   let enteringApp = false;
   let localMode = false;
 
@@ -54,6 +69,138 @@ function installRuntimeFixes() {
     el.textContent = msg;
     el.style.color = isError ? '#dc2626' : '#166534';
     el.style.display = 'block';
+  };
+
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function loadJson(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.error('loadJson:', key, e);
+      return fallback;
+    }
+  }
+
+  function persistLocalImages() {
+    try {
+      const customImages = {};
+      Object.keys(imgCache || {}).forEach(key => {
+        if (key.startsWith('custom_') && imgCache[key]) customImages[key] = imgCache[key];
+      });
+      localStorage.setItem(LOCAL_IMAGES_KEY, JSON.stringify(customImages));
+    } catch (e) {
+      console.error('persistLocalImages:', e);
+    }
+  }
+
+  function loadLocalImages() {
+    const customImages = loadJson(LOCAL_IMAGES_KEY, {});
+    Object.keys(customImages).forEach(key => { imgCache[key] = customImages[key]; });
+  }
+
+  function persistLocalGarden() {
+    try {
+      localStorage.setItem(LOCAL_PLANTS_KEY, JSON.stringify(P));
+      localStorage.setItem(LOCAL_DATES_KEY, JSON.stringify(plantingDates));
+      persistLocalImages();
+    } catch (e) {
+      console.error('persistLocalGarden:', e);
+      showToast('לא הצלחנו לשמור בדפדפן. ייתכן שהאחסון המקומי מלא.');
+    }
+  }
+
+  function loadLocalGarden() {
+    const storedPlants = loadJson(LOCAL_PLANTS_KEY, null);
+    const storedDates = loadJson(LOCAL_DATES_KEY, {});
+
+    if (Array.isArray(storedPlants)) {
+      P.length = 0;
+      storedPlants.forEach(p => P.push(p));
+    }
+
+    Object.keys(plantingDates).forEach(key => delete plantingDates[key]);
+    if (storedDates && typeof storedDates === 'object') Object.assign(plantingDates, storedDates);
+    loadLocalImages();
+  }
+
+  function localPlantsExist() {
+    return localStorage.getItem(LOCAL_PLANTS_KEY) !== null;
+  }
+
+  window.dbSavePlant = async function patchedDbSavePlant(plant) {
+    const idx = P.findIndex(p => p.id === plant.id);
+    if (idx >= 0) P[idx] = { ...P[idx], ...plant };
+    else P.push(plant);
+    persistLocalGarden();
+
+    if (!_db || !currentUser || localMode) return;
+    try { await cloud.dbSavePlant(plant); } catch (e) { console.error('dbSavePlant cloud:', e); }
+  };
+
+  window.dbDeletePlant = async function patchedDbDeletePlant(id) {
+    persistLocalGarden();
+    if (!_db || !currentUser || localMode) return;
+    try { await cloud.dbDeletePlant(id); } catch (e) { console.error('dbDeletePlant cloud:', e); }
+  };
+
+  window.dbLoadPlants = async function patchedDbLoadPlants() {
+    if (localMode || !_db || !currentUser) {
+      if (!localPlantsExist()) return null;
+      return clone(loadJson(LOCAL_PLANTS_KEY, []));
+    }
+
+    try { return await cloud.dbLoadPlants(); } catch (e) {
+      console.error('dbLoadPlants cloud:', e);
+      if (!localPlantsExist()) return null;
+      return clone(loadJson(LOCAL_PLANTS_KEY, []));
+    }
+  };
+
+  window.dbSavePlantingDate = async function patchedDbSavePlantingDate(plantId, dateStr) {
+    plantingDates[plantId] = dateStr;
+    persistLocalGarden();
+    if (!_db || !currentUser || localMode) return;
+    try { await cloud.dbSavePlantingDate(plantId, dateStr); } catch (e) { console.error('dbSavePlantingDate cloud:', e); }
+  };
+
+  window.dbDeletePlantingDate = async function patchedDbDeletePlantingDate(plantId) {
+    delete plantingDates[plantId];
+    persistLocalGarden();
+    if (!_db || !currentUser || localMode) return;
+    try { await cloud.dbDeletePlantingDate(plantId); } catch (e) { console.error('dbDeletePlantingDate cloud:', e); }
+  };
+
+  window.dbLoadPlantingDates = async function patchedDbLoadPlantingDates() {
+    if (localMode || !_db || !currentUser) return clone(loadJson(LOCAL_DATES_KEY, {}));
+
+    try { return await cloud.dbLoadPlantingDates(); } catch (e) {
+      console.error('dbLoadPlantingDates cloud:', e);
+      return clone(loadJson(LOCAL_DATES_KEY, {}));
+    }
+  };
+
+  window.saveAge = function patchedSaveAge(pid) {
+    if (typeof cloud.saveAge === 'function') cloud.saveAge(pid);
+    persistLocalGarden();
+  };
+
+  window.clearAge = function patchedClearAge(pid) {
+    if (typeof cloud.clearAge === 'function') cloud.clearAge(pid);
+    persistLocalGarden();
+  };
+
+  window.savePhotoEdit = function patchedSavePhotoEdit() {
+    if (typeof cloud.savePhotoEdit === 'function') cloud.savePhotoEdit();
+    persistLocalImages();
+  };
+
+  window.confirmResetPlant = function patchedConfirmResetPlant() {
+    if (typeof cloud.confirmResetPlant === 'function') cloud.confirmResetPlant();
+    persistLocalGarden();
   };
 
   async function supabaseReachable(timeoutMs = 3500) {
@@ -79,6 +226,7 @@ function installRuntimeFixes() {
     localMode = true;
     try { _db = null; } catch (e) {}
     try { currentUser = { id: 'local-offline', email: 'מצב מקומי' }; } catch (e) {}
+    loadLocalGarden();
 
     hideAuthScreen();
     renderUserHeader(currentUser);
@@ -198,7 +346,7 @@ function installRuntimeFixes() {
 
       if (dbPlants !== null) {
         P.length = 0;
-        if (dbPlants.length > 0) {
+        if (dbPlants.length > 0 || localPlantsExist()) {
           dbPlants.forEach(p => P.push(p));
         } else {
           const CATALOG = getAllCatalogPlants();
@@ -212,6 +360,7 @@ function installRuntimeFixes() {
       }
 
       if (dbDates) Object.assign(plantingDates, dbDates);
+      loadLocalImages();
 
       document.getElementById('monthPill').textContent = `📅 ${MHE[CUR - 1]} ${NOW.getFullYear()}`;
       document.getElementById('msel').value = 0;
