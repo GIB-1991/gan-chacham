@@ -1,5 +1,5 @@
 (function () {
-  const APP_VERSION = 'local-save-fix-20260506b';
+  const APP_VERSION = 'login-defaults-fix-20260506';
   const hostScript = document.currentScript;
   const mainScript = document.createElement('script');
   const authSubmitBtn = document.getElementById('auth-submit-btn');
@@ -21,11 +21,8 @@
     if (googleBtn) googleBtn.disabled = false;
   };
 
-  if (hostScript && hostScript.parentNode) {
-    hostScript.parentNode.insertBefore(mainScript, hostScript.nextSibling);
-  } else {
-    document.body.appendChild(mainScript);
-  }
+  if (hostScript && hostScript.parentNode) hostScript.parentNode.insertBefore(mainScript, hostScript.nextSibling);
+  else document.body.appendChild(mainScript);
 })();
 
 function showAppLoadingError(msg = 'האפליקציה עדיין נטענת. נסה שוב בעוד רגע.') {
@@ -38,6 +35,7 @@ function showAppLoadingError(msg = 'האפליקציה עדיין נטענת. נ
 
 function installRuntimeFixes() {
   const originalShowAuthError = window.showAuthError;
+  const originalShowAuthScreen = window.showAuthScreen;
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const googleBtn = document.querySelector('.auth-btn-google');
   const cloud = {
@@ -47,8 +45,6 @@ function installRuntimeFixes() {
     dbSavePlantingDate: window.dbSavePlantingDate,
     dbDeletePlantingDate: window.dbDeletePlantingDate,
     dbLoadPlantingDates: window.dbLoadPlantingDates,
-    dbSaveCareLog: window.dbSaveCareLog,
-    dbLoadCareLog: window.dbLoadCareLog,
     loginWithEmail: window.loginWithEmail,
     registerWithEmail: window.registerWithEmail,
     logout: window.logout,
@@ -58,9 +54,19 @@ function installRuntimeFixes() {
     confirmResetPlant: window.confirmResetPlant
   };
 
+  const LOCAL_SESSION_KEY = 'gan_chacham_local_session_v1';
+  const LOCAL_LOGOUT_KEY = 'gan_chacham_local_logged_out_v1';
   const LOCAL_PLANTS_KEY = 'gan_chacham_local_plants_v2';
   const LOCAL_DATES_KEY = 'gan_chacham_local_planting_dates_v2';
   const LOCAL_IMAGES_KEY = 'gan_chacham_local_images_v2';
+  const DEFAULT_PLANT_CANDIDATES = [
+    ['מנגו'],
+    ['תאנה'],
+    ['שמיר'],
+    ['שסק'],
+    ['ערבה בוכייה', 'ערבה בוכיה']
+  ];
+
   let enteringApp = false;
   let localMode = false;
 
@@ -68,11 +74,7 @@ function installRuntimeFixes() {
   if (googleBtn) googleBtn.disabled = false;
 
   window.showAuthError = function patchedShowAuthError(msg, isError = true) {
-    if (typeof originalShowAuthError === 'function') {
-      originalShowAuthError(msg, isError);
-      return;
-    }
-
+    if (typeof originalShowAuthError === 'function') return originalShowAuthError(msg, isError);
     const el = document.getElementById('auth-error');
     if (!el) return;
     el.textContent = msg;
@@ -80,9 +82,15 @@ function installRuntimeFixes() {
     el.style.display = 'block';
   };
 
-  function clone(value) {
-    return JSON.parse(JSON.stringify(value));
-  }
+  window.showAuthScreen = function patchedShowAuthScreen() {
+    if (localMode) {
+      currentUser = makeLocalUser();
+      return;
+    }
+    if (typeof originalShowAuthScreen === 'function') originalShowAuthScreen();
+  };
+
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
   function loadJson(key, fallback) {
     try {
@@ -94,17 +102,12 @@ function installRuntimeFixes() {
     }
   }
 
-  function saveJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-
-  function localPlantsExist() {
-    return localStorage.getItem(LOCAL_PLANTS_KEY) !== null;
-  }
-
-  function localDatesExist() {
-    return localStorage.getItem(LOCAL_DATES_KEY) !== null;
-  }
+  function saveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  function hasLocalSession() { return localStorage.getItem(LOCAL_SESSION_KEY) === 'true'; }
+  function hasLocalLogout() { return localStorage.getItem(LOCAL_LOGOUT_KEY) === 'true'; }
+  function localPlantsExist() { return localStorage.getItem(LOCAL_PLANTS_KEY) !== null; }
+  function localDatesExist() { return localStorage.getItem(LOCAL_DATES_KEY) !== null; }
+  function makeLocalUser() { return { id: 'local-offline', email: 'מצב מקומי', user_metadata: { full_name: 'מצב מקומי' } }; }
 
   function readLocalPlants() {
     const plants = loadJson(LOCAL_PLANTS_KEY, []);
@@ -114,6 +117,12 @@ function installRuntimeFixes() {
   function readLocalDates() {
     const dates = loadJson(LOCAL_DATES_KEY, {});
     return dates && typeof dates === 'object' ? dates : {};
+  }
+
+  function hasOAuthReturn() {
+    const search = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return !!(search.get('code') || search.get('error') || search.get('error_description') || hash.get('access_token') || hash.get('error'));
   }
 
   function persistLocalImages() {
@@ -142,23 +151,17 @@ function installRuntimeFixes() {
       persistLocalImages();
     } catch (e) {
       console.error('persistLocalGarden:', e);
-      if (typeof showToast === 'function') {
-        showToast('לא הצלחנו לשמור בדפדפן. ייתכן שהאחסון המקומי מלא.');
-      }
+      if (typeof showToast === 'function') showToast('לא הצלחנו לשמור בדפדפן. ייתכן שהאחסון המקומי מלא.');
     }
   }
 
   function loadLocalGarden() {
-    const storedPlants = readLocalPlants();
-    const storedDates = readLocalDates();
-
     if (localPlantsExist()) {
       P.length = 0;
-      storedPlants.forEach(p => P.push(p));
+      readLocalPlants().forEach(p => P.push(p));
     }
-
     Object.keys(plantingDates).forEach(key => delete plantingDates[key]);
-    Object.assign(plantingDates, storedDates);
+    Object.assign(plantingDates, readLocalDates());
     loadLocalImages();
   }
 
@@ -175,10 +178,12 @@ function installRuntimeFixes() {
 
   function enterLocalMode(reason) {
     localMode = true;
+    localStorage.setItem(LOCAL_SESSION_KEY, 'true');
+    localStorage.removeItem(LOCAL_LOGOUT_KEY);
     try { _db = null; } catch (e) {}
-    try { currentUser = { id: 'local-offline', email: 'מצב מקומי', user_metadata: { full_name: 'מצב מקומי' } }; } catch (e) {}
+    try { currentUser = makeLocalUser(); } catch (e) {}
     loadLocalGarden();
-    renderCurrentGarden(reason || 'האפליקציה נפתחה במצב מקומי');
+    renderCurrentGarden(reason || 'הגינה נטענה מהדפדפן');
   }
 
   async function supabaseReachable(timeoutMs = 3500) {
@@ -186,12 +191,8 @@ function installRuntimeFixes() {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      const res = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
-        method: 'GET',
-        cache: 'no-store',
-        signal: ctrl.signal
-      });
-      return !!res;
+      await fetch(`${SUPABASE_URL}/auth/v1/settings`, { method: 'GET', cache: 'no-store', signal: ctrl.signal });
+      return true;
     } catch (e) {
       console.error('supabaseReachable:', e);
       return false;
@@ -200,12 +201,18 @@ function installRuntimeFixes() {
     }
   }
 
+  function findDefaultPlants() {
+    const catalog = getAllCatalogPlants();
+    return DEFAULT_PLANT_CANDIDATES
+      .map(names => names.map(name => catalog.find(p => p.name === name)).find(Boolean))
+      .filter(Boolean);
+  }
+
   window.dbSavePlant = async function patchedDbSavePlant(plant) {
     const idx = P.findIndex(p => p.id === plant.id);
     if (idx >= 0) P[idx] = { ...P[idx], ...plant };
     else P.push(plant);
     persistLocalGarden();
-
     if (!_db || !currentUser || localMode || typeof cloud.dbSavePlant !== 'function') return;
     try { await cloud.dbSavePlant(plant); } catch (e) { console.error('dbSavePlant cloud:', e); }
   };
@@ -217,10 +224,7 @@ function installRuntimeFixes() {
   };
 
   window.dbLoadPlants = async function patchedDbLoadPlants() {
-    if (localMode || !_db || !currentUser || typeof cloud.dbLoadPlants !== 'function') {
-      return localPlantsExist() ? clone(readLocalPlants()) : null;
-    }
-
+    if (localMode || !_db || !currentUser || typeof cloud.dbLoadPlants !== 'function') return localPlantsExist() ? clone(readLocalPlants()) : null;
     try {
       const remotePlants = await cloud.dbLoadPlants();
       if (Array.isArray(remotePlants)) {
@@ -234,7 +238,6 @@ function installRuntimeFixes() {
     } catch (e) {
       console.error('dbLoadPlants cloud:', e);
     }
-
     return localPlantsExist() ? clone(readLocalPlants()) : null;
   };
 
@@ -253,10 +256,7 @@ function installRuntimeFixes() {
   };
 
   window.dbLoadPlantingDates = async function patchedDbLoadPlantingDates() {
-    if (localMode || !_db || !currentUser || typeof cloud.dbLoadPlantingDates !== 'function') {
-      return clone(readLocalDates());
-    }
-
+    if (localMode || !_db || !currentUser || typeof cloud.dbLoadPlantingDates !== 'function') return clone(readLocalDates());
     try {
       const remoteDates = await cloud.dbLoadPlantingDates();
       if (remoteDates && typeof remoteDates === 'object') {
@@ -271,7 +271,6 @@ function installRuntimeFixes() {
     } catch (e) {
       console.error('dbLoadPlantingDates cloud:', e);
     }
-
     return clone(readLocalDates());
   };
 
@@ -280,20 +279,14 @@ function installRuntimeFixes() {
       enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
       return;
     }
-
     try {
       const returnUrl = new URL(window.location.href);
       returnUrl.search = '';
       returnUrl.hash = '';
-
       const { error } = await _db.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: returnUrl.toString(),
-          queryParams: { prompt: 'select_account' }
-        }
+        options: { redirectTo: returnUrl.toString(), queryParams: { prompt: 'select_account' } }
       });
-
       if (error) showAuthError('שגיאת התחברות עם Google: ' + error.message);
     } catch (e) {
       console.error('loginWithGoogle:', e);
@@ -306,10 +299,8 @@ function installRuntimeFixes() {
       enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
       return;
     }
-
-    try {
-      await cloud.loginWithEmail(email, password);
-    } catch (e) {
+    try { await cloud.loginWithEmail(email, password); }
+    catch (e) {
       console.error('loginWithEmail:', e);
       enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
     }
@@ -320,20 +311,20 @@ function installRuntimeFixes() {
       enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
       return;
     }
-
-    try {
-      await cloud.registerWithEmail(email, password);
-    } catch (e) {
+    try { await cloud.registerWithEmail(email, password); }
+    catch (e) {
       console.error('registerWithEmail:', e);
       showAuthError('לא הצלחנו להשלים הרשמה כרגע. אפשר להמשיך במצב מקומי.');
     }
   };
 
   window.logout = async function patchedLogout() {
+    localStorage.removeItem(LOCAL_SESSION_KEY);
+    localStorage.setItem(LOCAL_LOGOUT_KEY, 'true');
     if (localMode || !_db || typeof cloud.logout !== 'function') {
       currentUser = null;
       localMode = false;
-      showAuthScreen();
+      if (typeof originalShowAuthScreen === 'function') originalShowAuthScreen();
       return;
     }
     await cloud.logout();
@@ -342,12 +333,10 @@ function installRuntimeFixes() {
   window.onAuthSubmit = function patchedOnAuthSubmit() {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
-
     if (!email || !password) {
       showAuthError('יש להזין אימייל וסיסמה');
       return;
     }
-
     if (authMode === 'login') loginWithEmail(email, password);
     else registerWithEmail(email, password);
   };
@@ -355,18 +344,10 @@ function installRuntimeFixes() {
   window.onUserLoggedIn = async function patchedOnUserLoggedIn() {
     if (enteringApp) return;
     enteringApp = true;
-
     try {
-      try {
-        currentUser = currentUser || (await _db.auth.getUser()).data.user;
-      } catch (e) {
-        console.error('getUser:', e);
-      }
-
-      if (!currentUser) {
-        showAuthScreen();
-        return;
-      }
+      try { currentUser = currentUser || (await _db.auth.getUser()).data.user; }
+      catch (e) { console.error('getUser:', e); }
+      if (!currentUser) { showAuthScreen(); return; }
 
       renderUserHeader(currentUser);
       hideAuthScreen();
@@ -374,29 +355,18 @@ function installRuntimeFixes() {
 
       let dbPlants = null;
       let dbDates = {};
-
-      try {
-        [dbPlants, dbDates] = await Promise.all([dbLoadPlants(), dbLoadPlantingDates()]);
-      } catch (e) {
+      try { [dbPlants, dbDates] = await Promise.all([dbLoadPlants(), dbLoadPlantingDates()]); }
+      catch (e) {
         console.error('load garden data:', e);
         showToast('חלק מהנתונים לא נטענו, אבל אפשר להמשיך לעבוד.');
       }
-
-      try {
-        await dbLoadCareLog();
-      } catch (e) {
-        console.error('load care log:', e);
-      }
+      try { await dbLoadCareLog(); } catch (e) { console.error('load care log:', e); }
 
       if (dbPlants !== null) {
         P.length = 0;
-        if (dbPlants.length > 0 || localPlantsExist()) {
-          dbPlants.forEach(p => P.push(p));
-        } else {
-          const CATALOG = getAllCatalogPlants();
-          const defaultNames = ['לימון ננסי', 'תפוז טבורי', 'אורן ירושלים', 'נענע'];
-          const seeds = defaultNames.map(n => CATALOG.find(p => p.name === n)).filter(Boolean);
-          for (const p of seeds) {
+        if (dbPlants.length > 0 || localPlantsExist()) dbPlants.forEach(p => P.push(p));
+        else {
+          for (const p of findDefaultPlants()) {
             P.push(p);
             await dbSavePlant(p);
           }
@@ -435,35 +405,26 @@ function installRuntimeFixes() {
 
   function cleanAuthUrl() {
     const clean = `${window.location.origin}${window.location.pathname}`;
-    if (window.history && window.history.replaceState) {
-      window.history.replaceState({}, document.title, clean);
-    }
+    if (window.history && window.history.replaceState) window.history.replaceState({}, document.title, clean);
   }
 
   function readAuthError() {
-    const sources = [
-      new URLSearchParams(window.location.search),
-      new URLSearchParams(window.location.hash.replace(/^#/, ''))
-    ];
-
+    const sources = [new URLSearchParams(window.location.search), new URLSearchParams(window.location.hash.replace(/^#/, ''))];
     for (const params of sources) {
       const msg = params.get('error_description') || params.get('error');
       if (msg) return decodeURIComponent(msg.replace(/\+/g, ' '));
     }
-
     return '';
   }
 
   async function resumeOAuthSession() {
     if (!_db || localMode) return;
-
     const authError = readAuthError();
     if (authError) {
       showAuthError('Google החזיר שגיאה: ' + authError);
       cleanAuthUrl();
       return;
     }
-
     try {
       const code = new URLSearchParams(window.location.search).get('code');
       if (code && typeof _db.auth.exchangeCodeForSession === 'function') {
@@ -474,13 +435,11 @@ function installRuntimeFixes() {
         }
         cleanAuthUrl();
       }
-
       const { data, error } = await _db.auth.getSession();
       if (error) {
         console.error('getSession:', error.message);
         return;
       }
-
       if (data?.session?.user) {
         currentUser = data.session.user;
         await onUserLoggedIn();
@@ -491,18 +450,12 @@ function installRuntimeFixes() {
     }
   }
 
-  function careStorageKey(key) {
-    return currentUser ? `care_${currentUser.id}_${key}` : `care_${key}`;
-  }
-
-  function legacyCareStorageKey(key) {
-    return `care_${key}`;
-  }
+  function careStorageKey(key) { return currentUser ? `care_${currentUser.id}_${key}` : `care_${key}`; }
+  function legacyCareStorageKey(key) { return `care_${key}`; }
 
   window.dbSaveCareLog = async function patchedDbSaveCareLog(key, val) {
     const storageKey = careStorageKey(key);
     const legacyKey = legacyCareStorageKey(key);
-
     if (val) {
       localStorage.setItem(storageKey, 'true');
       if (legacyKey !== storageKey) localStorage.removeItem(legacyKey);
@@ -510,22 +463,12 @@ function installRuntimeFixes() {
       localStorage.removeItem(storageKey);
       if (legacyKey !== storageKey) localStorage.removeItem(legacyKey);
     }
-
     if (!_db || !currentUser || localMode) return;
-
     try {
-      const { error: deleteError } = await _db.from('care_log').delete()
-        .eq('key', key)
-        .eq('user_id', currentUser.id);
-
-      if (deleteError) {
-        console.error('dbSaveCareLog delete:', deleteError.message);
-        return;
-      }
-
+      const { error: deleteError } = await _db.from('care_log').delete().eq('key', key).eq('user_id', currentUser.id);
+      if (deleteError) return console.error('dbSaveCareLog delete:', deleteError.message);
       if (val) {
-        const { error: insertError } = await _db.from('care_log')
-          .insert({ key, user_id: currentUser.id, done: true });
+        const { error: insertError } = await _db.from('care_log').insert({ key, user_id: currentUser.id, done: true });
         if (insertError) console.error('dbSaveCareLog insert:', insertError.message);
       }
     } catch (e) {
@@ -535,42 +478,27 @@ function installRuntimeFixes() {
 
   window.dbLoadCareLog = async function patchedDbLoadCareLog() {
     Object.keys(CL_DONE).forEach(k => delete CL_DONE[k]);
-
     const userPrefix = currentUser ? `care_${currentUser.id}_` : 'care_';
     const legacyPattern = /^care_\d+_(prune|fert|supp|crit)_\d+$/;
-
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
-
-      if (k.startsWith(userPrefix)) {
-        CL_DONE[k.slice(userPrefix.length)] = true;
-      } else if (currentUser && legacyPattern.test(k)) {
+      if (k.startsWith(userPrefix)) CL_DONE[k.slice(userPrefix.length)] = true;
+      else if (currentUser && legacyPattern.test(k)) {
         const legacyKey = k.replace('care_', '');
         CL_DONE[legacyKey] = true;
         localStorage.setItem(careStorageKey(legacyKey), 'true');
         localStorage.removeItem(k);
       }
     }
-
     if (!_db || !currentUser || localMode) return;
-
     try {
-      const { data, error } = await _db.from('care_log').select('key')
-        .eq('user_id', currentUser.id)
-        .eq('done', true);
-
-      if (error) {
-        console.error('dbLoadCareLog:', error.message);
-        return;
-      }
-
-      if (data) {
-        data.forEach(r => {
-          CL_DONE[r.key] = true;
-          localStorage.setItem(careStorageKey(r.key), 'true');
-        });
-      }
+      const { data, error } = await _db.from('care_log').select('key').eq('user_id', currentUser.id).eq('done', true);
+      if (error) return console.error('dbLoadCareLog:', error.message);
+      if (data) data.forEach(r => {
+        CL_DONE[r.key] = true;
+        localStorage.setItem(careStorageKey(r.key), 'true');
+      });
     } catch (e) {
       console.error('dbLoadCareLog:', e);
     }
@@ -596,6 +524,10 @@ function installRuntimeFixes() {
   };
 
   setTimeout(async function startAuthRecovery() {
+    if ((hasLocalSession() || (localPlantsExist() && !hasLocalLogout())) && !hasOAuthReturn()) {
+      enterLocalMode('הגינה נטענה מהדפדפן');
+      return;
+    }
     if (_db && !(await supabaseReachable())) {
       enterLocalMode('Supabase לא זמין כרגע, לכן פתחנו את האתר במצב מקומי.');
       return;
@@ -606,8 +538,6 @@ function installRuntimeFixes() {
   setTimeout(async function refreshCareLogAfterPatch() {
     if (typeof currentUser === 'undefined' || !currentUser) return;
     await dbLoadCareLog();
-    if (typeof TF !== 'undefined' && TF === 'alerts') {
-      renderChecklist(document.getElementById('pa'));
-    }
+    if (typeof TF !== 'undefined' && TF === 'alerts') renderChecklist(document.getElementById('pa'));
   }, 0);
 }
