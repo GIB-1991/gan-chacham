@@ -1,5 +1,5 @@
 (function () {
-  const APP_VERSION = 'login-defaults-fix-20260506';
+  const APP_VERSION = 'image-main-fix-20260506';
   const hostScript = document.currentScript;
   const mainScript = document.createElement('script');
   const authSubmitBtn = document.getElementById('auth-submit-btn');
@@ -66,6 +66,160 @@ function installRuntimeFixes() {
     ['שסק'],
     ['ערבה בוכייה', 'ערבה בוכיה']
   ];
+  const PLANT_IMAGE_PAGES = {
+    'ערבה בוכיה': 'Weeping willow',
+    'ערבה בוכייה': 'Weeping willow',
+    'תפוז טבורי': 'Navel orange',
+    'לימון ננסי': 'Lemon',
+    'פפאיה': 'Papaya',
+    'שזיף פיסרדי': 'Prunus cerasifera',
+    'אבוקדו': 'Avocado',
+    'מנגו': 'Mangifera indica',
+    'פקאן': 'Pecan',
+    'צפצפה': 'Populus',
+    'נקטרינה': 'Nectarine',
+    'תות עץ': 'Morus nigra',
+    'תפוח פינק ליידי': 'Pink Lady apple',
+    'אלה סינית': 'Pistacia chinensis',
+    'פומלה': 'Pomelo',
+    'שקד': 'Almond',
+    'גודגדן': 'Prunus avium',
+    'פטל': 'Raspberry',
+    'אוכמניות': 'Blueberry',
+    'דשא יפני': 'Zoysia japonica',
+    'דשא קוקויה': 'Kikuyu grass',
+    'רימון': 'Pomegranate',
+    'תאנה': 'Ficus carica',
+    'זית': 'Olive',
+    'ענב': 'Grape',
+    'אפרסק': 'Peach',
+    'אגס': 'Pear',
+    'שסק': 'Loquat',
+    'מנדרינה': 'Mandarin orange',
+    'אשכולית': 'Grapefruit',
+    'בננה': 'Banana',
+    'תמר': 'Date palm',
+    'פיג׳ואה': 'Feijoa',
+    'סברס': 'Opuntia ficus-indica',
+    'קיווי': 'Kiwifruit',
+    'דובדבן': 'Cherry',
+    'תות שדה': 'Strawberry',
+    'נענע': 'Mentha',
+    'רוזמרין': 'Rosemary',
+    'לבנדר': 'Lavender',
+    'מרווה': 'Salvia officinalis',
+    'בזיליקום': 'Basil',
+    'הדס': 'Myrtle',
+    'ברוש': 'Italian cypress',
+    'בוגנוויליה': 'Bougainvillea',
+    'הורדה': 'Rose',
+    'ורד': 'Rose',
+    'יסמין': 'Jasmine',
+    'פיקוס בנג׳מין': 'Ficus benjamina',
+    'דרסנה': 'Dracaena marginata',
+    'סנסוויריה': 'Dracaena trifasciata',
+    'זמיוקולקס': 'Zamioculcas',
+    'פלמריה': 'Plumeria',
+    'פלומריה': 'Plumeria',
+    'חרוב': 'Carob',
+    'שיזף': 'Jujube',
+    'פשיפלורה': 'Passion fruit',
+    'עגבנייה': 'Tomato',
+    'מלפפון': 'Cucumber',
+    'פלפל': 'Bell pepper',
+    'אבטיח': 'Watermelon',
+    'חציל': 'Eggplant',
+    'אורן ירושלים': 'Aleppo pine',
+    'אקליפטוס': 'Eucalyptus',
+    'דולב': 'Platanus orientalis',
+    'אורן אלפי': 'Swiss pine',
+    'שיטה': 'Acacia',
+    'אלת המסטיק': 'Pistacia lentiscus',
+    'קסיה': 'Cassia fistula',
+    'טבק נאה': 'Nicotiana glauca',
+    'אדמונית': 'Cyclamen persicum',
+    'נרקיס': 'Narcissus',
+    'צבעוני': 'Tulip',
+    'קלנדולה': 'Calendula officinalis',
+    'פטוניה': 'Petunia',
+    'ציפורן': 'Dianthus caryophyllus',
+    'פורטולקה': 'Portulaca grandiflora',
+    'אגפנטוס': 'Agapanthus',
+    'גזניה': 'Gazania',
+    'בריגמיה': 'Brighamia insignis',
+    'אלוורה': 'Aloe vera',
+    'אגבה': 'Agave',
+    'קוקוס': 'Coconut',
+    'ג׳ינג׳ר': 'Ginger',
+    'כורכום': 'Turmeric',
+    'למון גראס': 'Cymbopogon citratus',
+    'סטביה': 'Stevia rebaudiana',
+    'אורגנו': 'Oregano',
+    'טימין': 'Thyme',
+    'פטרוזיליה': 'Parsley',
+    'שמיר': 'Dill',
+    'כוסברה': 'Coriander',
+    'עירית': 'Chives',
+    'ליים': 'Key lime',
+    'קומקוואט': 'Kumquat',
+    'פפינו': 'Pepino',
+    'לוקומה': 'Pouteria lucuma',
+    'ג׳קפרוט': 'Jackfruit',
+    'ארמורסיה': 'Horseradish',
+    'לבנה': 'Styrax officinalis',
+    'כליסטמון': 'Callistemon',
+    'ג׳קרנדה': 'Jacaranda mimosifolia',
+    'מיקוניה': 'Miconia',
+    'לנטנה': 'Lantana camara',
+    'אולינדר / נרייה': 'Nerium oleander',
+    'אגוז': 'Walnut',
+    'ערמון': 'Sweet chestnut',
+    'לוטוס': 'Nelumbo nucifera',
+    'פפירוס': 'Cyperus papyrus',
+    'במבוק': 'Bamboo',
+    'פאלם ארקה': 'Dypsis lutescens',
+    'קורדילינה': 'Cordyline australis',
+    'יוקה': 'Yucca',
+    'פייקוס לירטה': 'Ficus lyrata',
+    'שפיפון': 'Ophiopogon japonicus',
+    'פיטוספורום': 'Pittosporum tobira',
+    'ליגוסטרום': 'Ligustrum',
+    'דוקן': 'Podocarpus',
+    'קורן': 'Cornus',
+    'טרחלה': 'Teucrium fruticans',
+    'ספיריאה': 'Spiraea',
+    'פורסיתיה': 'Forsythia',
+    'מגנוליה': 'Magnolia',
+    'דפנה': 'Laurus nobilis',
+    'גרניום': 'Pelargonium',
+    'אמריליס': 'Amaryllis',
+    'היביסקוס': 'Hibiscus rosa-sinensis',
+    'גרוויליאה': 'Grevillea',
+    'אשל': 'Tamarix',
+    'חמנייה': 'Helianthus annuus',
+    'כלנית': 'Anemone coronaria',
+    'חלמית': 'Malva',
+    'ורד ים': 'Armeria maritima',
+    'מלוח': 'Atriplex',
+    'דגניה': 'Ixia',
+    'גלדיולה': 'Gladiolus',
+    'דהליה': 'Dahlia',
+    'ציניה': 'Zinnia',
+    'סלוויה': 'Salvia',
+    'כוסמת': 'Buckwheat',
+    'אנמון': 'Anemone',
+    'מוסקרי': 'Muscari',
+    'צ׳יה': 'Chia',
+    'ספנות': 'Satureja',
+    'תרד': 'Spinach',
+    'חסה': 'Lettuce',
+    'גזר': 'Carrot',
+    'סלק': 'Beetroot',
+    'ברוקולי': 'Broccoli',
+    'כרובית': 'Cauliflower',
+    'שעועית': 'Common bean',
+    'כרישה': 'Leek'
+  };
 
   let enteringApp = false;
   let localMode = false;
@@ -522,6 +676,156 @@ function installRuntimeFixes() {
     });
     renderChecklist(document.getElementById('pa'));
   };
+
+  function installImageStyles() {
+    if (document.getElementById('gan-image-main-style')) return;
+    const style = document.createElement('style');
+    style.id = 'gan-image-main-style';
+    style.textContent = `
+      .card .size-tabs{display:none!important}
+      .card-img{background:#dfeee2}
+      .real-photo,.m-slot-real{filter:saturate(1.04) contrast(1.02)}
+      .photo-loading.show,.m-slot-loading.show{background:rgba(15,42,26,.18)}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function getPlantForImage(idOrName) {
+    if (typeof idOrName === 'number') return P.find(p => p.id === idOrName) || null;
+    return P.find(p => p.name === idOrName) || (typeof CATALOG_ALL !== 'undefined' ? CATALOG_ALL.find(p => p.name === idOrName) : null) || { name: idOrName };
+  }
+
+  function imageCacheKey(plant, size) {
+    return `${plant.name}__${size || 'medium'}`;
+  }
+
+  function imageTargetsForPlant(plant) {
+    const targets = [];
+    const add = (type, value) => {
+      if (!value) return;
+      const key = `${type}:${value}`;
+      if (!targets.some(t => t.key === key)) targets.push({ key, type, value });
+    };
+
+    const alias = PLANT_IMAGE_PAGES[plant.name];
+    if (alias) add('wiki-en', alias);
+
+    try {
+      const wikiInfo = typeof WIKI_PAGES !== 'undefined' ? WIKI_PAGES[plant.name] : null;
+      if (wikiInfo?.page) add('wiki-en', wikiInfo.page);
+    } catch (e) {}
+
+    add('wiki-he', plant.name);
+    add('wikidata', alias || plant.name);
+    add('commons', alias || plant.name);
+
+    if (plant.name.includes('/')) {
+      plant.name.split('/').map(s => s.trim()).filter(Boolean).forEach(part => {
+        add('wiki-he', part);
+        add('wikidata', part);
+        add('commons', part);
+      });
+    }
+
+    if (plant.lbl) add('commons', `${alias || plant.name} ${plant.lbl}`);
+    return targets;
+  }
+
+  async function fetchWikiThumb(lang, pageName) {
+    const cacheKey = `wiki_thumb_${lang}_${pageName}`;
+    if (imgCache[cacheKey] !== undefined) return imgCache[cacheKey];
+    try {
+      const endpoint = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageName)}&prop=pageimages&pithumbsize=1000&format=json&origin=*`;
+      const resp = await fetch(endpoint, { cache: 'force-cache' });
+      const data = await resp.json();
+      const pages = data.query?.pages;
+      const page = pages ? Object.values(pages)[0] : null;
+      const url = page?.thumbnail?.source || null;
+      imgCache[cacheKey] = url;
+      return url;
+    } catch (e) {
+      imgCache[cacheKey] = null;
+      return null;
+    }
+  }
+
+  async function fetchWikidataImage(query) {
+    const cacheKey = `wikidata_img_${query}`;
+    if (imgCache[cacheKey] !== undefined) return imgCache[cacheKey];
+    try {
+      const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&language=he&uselang=he&type=item&limit=1&format=json&origin=*`;
+      const searchResp = await fetch(searchUrl, { cache: 'force-cache' });
+      const searchData = await searchResp.json();
+      const entityId = searchData.search?.[0]?.id;
+      if (!entityId) {
+        imgCache[cacheKey] = null;
+        return null;
+      }
+
+      const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=claims&format=json&origin=*`;
+      const entityResp = await fetch(entityUrl, { cache: 'force-cache' });
+      const entityData = await entityResp.json();
+      const fileName = entityData.entities?.[entityId]?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+      const url = fileName ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=1000` : null;
+      imgCache[cacheKey] = url;
+      return url;
+    } catch (e) {
+      imgCache[cacheKey] = null;
+      return null;
+    }
+  }
+
+  async function resolveMainPlantImage(plant, size = 'medium') {
+    if (!plant?.name) return null;
+
+    const customKey = `custom_${plant.id}_${size}`;
+    if (plant.id && imgCache[customKey]) return imgCache[customKey];
+
+    const directKey = imageCacheKey(plant, size);
+    if (imgCache[directKey] !== undefined) return imgCache[directKey];
+
+    const mediumKey = imageCacheKey(plant, 'medium');
+    if (size !== 'medium' && imgCache[mediumKey]) {
+      imgCache[directKey] = imgCache[mediumKey];
+      return imgCache[directKey];
+    }
+
+    let url = null;
+    for (const target of imageTargetsForPlant(plant)) {
+      if (target.type === 'wiki-en') url = await fetchWikiThumb('en', target.value);
+      else if (target.type === 'wiki-he') url = await fetchWikiThumb('he', target.value);
+      else if (target.type === 'wikidata') url = await fetchWikidataImage(target.value);
+      else if (target.type === 'commons' && typeof fetchCommonsImage === 'function') url = await fetchCommonsImage(`${target.value} plant`);
+      if (url) break;
+    }
+
+    imgCache[directKey] = url || null;
+    if (size !== 'medium' && url) imgCache[mediumKey] = imgCache[mediumKey] || url;
+    return imgCache[directKey];
+  }
+
+  window.fetchWikiImg = async function patchedFetchWikiImg(plantName, size) {
+    return resolveMainPlantImage(getPlantForImage(plantName), size || 'medium');
+  };
+
+  window.tryLoadImg = function patchedTryLoadImg(id, size, onSuccess, onFail) {
+    const plant = getPlantForImage(id);
+    if (!plant) {
+      if (onFail) onFail();
+      return;
+    }
+
+    resolveMainPlantImage(plant, size || 'medium').then(url => {
+      if (url) {
+        if (onSuccess) onSuccess(url);
+      } else if (onFail) onFail();
+    }).catch(e => {
+      console.error('tryLoadImg:', e);
+      if (onFail) onFail();
+    });
+  };
+
+  installImageStyles();
 
   setTimeout(async function startAuthRecovery() {
     if ((hasLocalSession() || (localPlantsExist() && !hasLocalLogout())) && !hasOAuthReturn()) {
