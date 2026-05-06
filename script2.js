@@ -1,5 +1,5 @@
 (function () {
-  const APP_VERSION = 'local-save-fix-20260506';
+  const APP_VERSION = 'local-save-fix-20260506b';
   const hostScript = document.currentScript;
   const mainScript = document.createElement('script');
   const authSubmitBtn = document.getElementById('auth-submit-btn');
@@ -229,7 +229,6 @@ function installRuntimeFixes() {
           return clone(remotePlants);
         }
         if (localPlantsExist()) return clone(readLocalPlants());
-        saveJson(LOCAL_PLANTS_KEY, []);
         return [];
       }
     } catch (e) {
