@@ -1,0 +1,289 @@
+/* Modern catalog-inspired garden theme */
+:root{
+  --g1:#243d2c;
+  --g2:#31543b;
+  --g3:#557a45;
+  --g4:#78925f;
+  --g5:#a9bf89;
+  --g6:#dfe9cb;
+  --g7:#f3f6e8;
+  --cream:#f6f0e4;
+  --paper:#fffdf8;
+  --ink:#213026;
+  --muted:#6d776d;
+  --soil:#a66a43;
+  --sun:#d59b2d;
+  --line:#e3dccd;
+  --shadow:rgba(49,64,42,.12);
+}
+
+*{letter-spacing:0!important}
+body{
+  background:
+    linear-gradient(180deg,#fbf7ed 0,#f3ecdc 320px,#eef3e6 100%);
+  color:var(--ink);
+}
+
+.header{
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  padding:18px 34px 16px;
+  box-shadow:0 2px 18px rgba(36,61,44,.08);
+}
+.header::after{
+  content:'';
+  position:absolute;
+  inset:auto 0 0;
+  height:4px;
+  background:linear-gradient(90deg,var(--g3),var(--sun),var(--soil));
+}
+.header-row{
+  max-width:1420px;
+  margin:0 auto;
+  align-items:center;
+}
+.header-title h1{
+  color:var(--g1);
+  font-size:2.05rem;
+  line-height:1.05;
+}
+.header-title h1 span{color:var(--soil)}
+.header-title p{
+  color:var(--muted);
+  font-size:.9rem;
+  margin-top:7px;
+}
+.header-meta{gap:12px}
+#user-header-info>div{
+  background:var(--g1);
+  border-radius:999px;
+  padding:5px 8px 5px 12px;
+}
+.month-pill{
+  background:#f5ead8;
+  border:1px solid #e8d8bf;
+  color:var(--g1);
+  border-radius:999px;
+}
+.notif-bell{
+  background:var(--g1);
+  border:1px solid var(--g1);
+  color:#fff;
+  border-radius:999px;
+  box-shadow:0 6px 16px rgba(36,61,44,.18);
+}
+.notif-bell:hover{background:var(--g2)}
+.notif-badge{border-color:var(--paper);background:var(--soil)}
+
+.alerts-bar{
+  max-width:1420px;
+  margin:18px auto 0;
+  background:rgba(255,253,248,.92);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px 16px;
+  box-shadow:0 8px 24px rgba(49,64,42,.07);
+}
+.alerts-label{color:var(--soil)}
+.chip{
+  border-radius:999px;
+  font-weight:800;
+  padding:6px 12px;
+}
+.chip.prune{background:#fff3cf;color:#765414;border-color:#ead287}
+.chip.fert{background:#eef6df;color:#38562e;border-color:#c9dcad}
+.chip.supp{background:#edf4f6;color:#2d5460;border-color:#bfd3d7}
+
+.layout{
+  max-width:1420px;
+  margin:18px auto 0;
+  grid-template-columns:288px 1fr;
+  min-height:calc(100vh - 178px);
+  gap:20px;
+  padding:0 22px 28px;
+}
+.sidebar{
+  background:rgba(255,253,248,.96);
+  border:1px solid var(--line);
+  border-radius:8px;
+  height:calc(100vh - 202px);
+  padding:18px 14px;
+  box-shadow:0 10px 28px rgba(49,64,42,.08);
+}
+.sb-ttl{
+  color:var(--soil);
+  font-size:.72rem;
+  text-transform:none;
+  font-weight:900;
+  padding:0 6px;
+}
+.sb-inp{
+  border-color:var(--line);
+  border-radius:8px;
+  background:#fff;
+  color:var(--ink);
+}
+.sb-inp:focus{border-color:var(--g3);box-shadow:0 0 0 3px rgba(85,122,69,.14)}
+.flt{
+  border-radius:8px;
+  color:var(--ink);
+  font-weight:700;
+  padding:9px 10px;
+}
+.flt:hover{background:#f2ebdb}
+.flt.on{
+  background:var(--g1);
+  color:#fff;
+  box-shadow:0 8px 18px rgba(36,61,44,.2);
+}
+.sb-badge{
+  background:#efe7d7;
+  color:var(--g1);
+}
+.divider{background:var(--line)}
+
+.plants-area{
+  background:transparent;
+  padding:0;
+}
+.floor-hdr{
+  color:var(--g1);
+  font-size:.88rem;
+  text-transform:none;
+  margin:3px 0 14px;
+}
+.floor-hdr::after{background:var(--line)}
+.grid{
+  grid-template-columns:repeat(auto-fill,minmax(258px,1fr));
+  gap:18px;
+  margin-bottom:30px;
+}
+
+.card{
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  box-shadow:0 8px 24px rgba(49,64,42,.08);
+}
+.card:hover{
+  transform:translateY(-3px);
+  border-color:#cfc4af;
+  box-shadow:0 15px 34px rgba(49,64,42,.13);
+}
+.card.alert{border-color:#dab65a}
+.card-img{
+  height:218px;
+  background:#e9eddf;
+}
+.real-photo{background:#e9eddf}
+.img-bg.fruit,.img-bg.citrus{background:linear-gradient(135deg,#fff3cf,#e0b45c)}
+.img-bg.ornamental{background:linear-gradient(135deg,#f1eadf,#a58973)}
+.img-bg.tropical{background:linear-gradient(135deg,#e7f0cf,#6f9b5c)}
+.img-bg.bush{background:linear-gradient(135deg,#edf2df,#8b9d68)}
+.img-bg.lawn{background:linear-gradient(135deg,#e9f6dc,#72a753)}
+.plant-emoji-big{font-size:5rem}
+.card-body{padding:15px 16px 17px}
+.card-name{
+  font-family:'Frank Ruhl Libre',serif;
+  font-size:1.28rem;
+  color:var(--g1);
+}
+.card-type{
+  background:#f1eadb;
+  color:var(--soil);
+  border-radius:999px;
+  font-weight:800;
+}
+.care-row{
+  color:var(--muted);
+  line-height:1.45;
+}
+.card-chips{
+  border-top-color:#eee5d4;
+  gap:6px;
+}
+.cc{border-radius:999px}
+.card-menu-btn{
+  border-radius:999px;
+  background:rgba(255,253,248,.95);
+  color:var(--g1);
+}
+.card-ctx-menu{
+  border-radius:8px;
+  border-color:var(--line);
+}
+
+.overlay{background:rgba(36,61,44,.72)}
+.modal{
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--paper);
+}
+.m-close,.np-close{
+  border-radius:999px;
+  background:rgba(255,253,248,.95);
+  color:var(--g1);
+}
+.m-info h2{
+  color:var(--g1);
+  font-size:1.85rem;
+}
+.m-info .sub{color:var(--muted)}
+.mseason,.msec,.nbox,.cbox,.age-editor,.orla-info,.cl-progress-box,.cl-progress{
+  border-radius:8px;
+}
+.mseason.w{background:#edf4f6;border-color:#c8dadd}
+.mseason.s{background:#fff5d9;border-color:#ead287}
+.msec-ttl{
+  color:var(--soil);
+  text-transform:none;
+}
+.irow{color:var(--muted)}
+.ilabel{color:var(--g1)}
+.itag,.hm-chip,.age-badge{border-radius:999px}
+.edit-btn,.reset-btn,.delete-plant-btn,.edit-field,.edit-save-btn,.edit-cancel-btn{
+  border-radius:8px;
+}
+.edit-save-btn,.btn-save-img,.btn-sub{
+  background:var(--g1);
+}
+
+.notif-panel,.pe-panel,.ap-panel{
+  background:var(--paper);
+}
+.np-hdr,.pe-hdr{
+  background:var(--g1);
+}
+.ni,.cl-item,.pe-opt,.ap-result-card{
+  border-radius:8px;
+}
+.cl-item{
+  background:var(--paper);
+  border-color:var(--line);
+}
+.cl-item.done{background:#eef6df}
+.cl-check{border-color:#c8d6ba}
+.cl-item.done .cl-check{background:var(--g1);border-color:var(--g1)}
+
+.auth-box{
+  border-radius:8px;
+  box-shadow:0 24px 70px rgba(0,0,0,.28);
+}
+.auth-btn,.auth-inp{border-radius:8px}
+.auth-btn-primary{background:var(--g1)}
+
+@media(max-width:900px){
+  .header{padding:17px 18px}
+  .header-row{align-items:flex-start;gap:16px}
+  .header-meta{flex-wrap:wrap;justify-content:flex-start}
+  .layout{
+    grid-template-columns:1fr;
+    padding:0 14px 22px;
+  }
+  .sidebar{
+    height:auto;
+    position:static;
+  }
+  .alerts-bar{margin:14px 14px 0}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+}
