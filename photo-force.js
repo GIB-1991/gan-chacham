@@ -1,132 +1,42 @@
-(function () {
-  var VERSION = 'force-real-photos-20260514';
-  var MAP = {
-    'ערבה בוכיה':'weeping willow tree','שסק':'loquat tree','מנגו':'mango tree','תאנה':'fig tree','שמיר':'dill plant',
-    'לימון':'lemon tree','לימון ננסי':'lemon tree','ליים':'lime tree','תפוז':'orange tree','תפוז טבורי':'orange tree',
-    'אשכולית':'grapefruit tree','קלמנטינה':'clementine tree','פומלה':'pomelo tree','אבוקדו':'avocado tree','רימון':'pomegranate tree',
-    'זית':'olive tree','ענב':'grape vine','ענבים':'grape vine','קיווי':'kiwi vine','פסיפלורה':'passion fruit vine','פשיפלורה':'passion fruit vine',
-    'נענע':'mint plant','בזיליקום':'basil plant','רוזמרין':'rosemary plant','מרווה':'sage plant','לואיזה':'lemon verbena plant','זוטה לבנה':'micromeria plant',
-    'תימין':'thyme plant','אורגנו':'oregano plant','פטרוזיליה':'parsley plant','כוסברה':'coriander plant','עירית':'chives plant',
-    'לבנדר':'lavender plant','ורד':'rose bush','בוגנוויליה':'bougainvillea plant','יסמין':'jasmine plant','גרניום':'geranium plant',
-    'בננה':'banana plant','תמר':'date palm','חרוב':'carob tree','שקד':'almond tree','שזיף':'plum tree','אפרסק':'peach tree','משמש':'apricot tree',
-    'תפוח':'apple tree','אגס':'pear tree','תות שדה':'strawberry plant','פטל':'raspberry bush','אוכמניות':'blueberry bush','סברס':'prickly pear cactus',
-    'אורן ירושלים':'aleppo pine tree','ברוש':'cypress tree','ברוש מצוי':'cypress tree','אקליפטוס':'eucalyptus tree','הדס':'myrtle plant',
-    'יוקה':'yucca plant','אלוורה':'aloe vera plant','מונסטרה':'monstera plant','סנסיווריה':'snake plant','סחלב':'orchid plant',
-    'רקפת':'cyclamen plant','כלנית':'anemone flower','נרקיס':'narcissus flower','צבעוני':'tulip flower','חמניה':'sunflower plant',
-    'לנטנה':'lantana plant','פטוניה':'petunia plant','שעועית':'bean plant','כרישה':'leek plant','מלפפון':'cucumber plant','עגבנייה':'tomato plant',
-    'פלפל':'pepper plant','חציל':'eggplant plant','חסה':'lettuce plant','קישוא':'zucchini plant','אבטיח':'watermelon plant','מלון':'melon plant',
-    'פאפאיה':'papaya tree','אננס':'pineapple plant','קוקוס':'coconut palm','תפוח אדמה':'potato plant','בטטה':'sweet potato plant','גזר':'carrot plant',
-    'בצל':'onion plant','שום':'garlic plant','כרוב':'cabbage plant','ברוקולי':'broccoli plant','כרובית':'cauliflower plant','סלרי':'celery plant'
+(function(){
+  var VERSION='wikimedia-real-photos-20260517';
+  var STAGES=['small','medium','large'];
+  var LABELS={small:'צמח צעיר',medium:'בן 3-4',large:'צמח בוגר'};
+  var FALLBACK_PAGES={
+    'ערבה בוכיה':'Weeping willow','ערבה בוכייה':'Weeping willow','שסק':'Loquat','מנגו':'Mangifera indica','תאנה':'Ficus carica','שמיר':'Dill',
+    'לימון':'Lemon','לימון ננסי':'Lemon','אבוקדו':'Avocado','רימון':'Pomegranate','זית':'Olive','נענע':'Mentha','בזיליקום':'Basil','רוזמרין':'Rosemary',
+    'לבנדר':'Lavandula','בננה':'Banana','תמר':'Date palm','חרוב':'Carob','שקד':'Almond','אפרסק':'Peach','תפוח':'Apple','אגס':'Pear',
+    'אורן ירושלים':'Aleppo pine','ברוש':'Italian cypress','אקליפטוס':'Eucalyptus','יוקה':'Yucca','אלוורה':'Aloe vera','מונסטרה':'Monstera deliciosa',
+    'כלנית':'Anemone coronaria','נרקיס':'Narcissus','חמניה':'Sunflower','עגבנייה':'Tomato','מלפפון':'Cucumber','פלפל':'Bell pepper','חציל':'Eggplant'
   };
-
-  function hash(text) {
-    var h = 2166136261;
-    text = String(text || '');
-    for (var i = 0; i < text.length; i++) {
-      h ^= text.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return Math.abs(h >>> 0);
-  }
-
-  function queryFor(name, stage) {
-    var base = MAP[name] || 'garden plant';
-    if (stage === 'small') return base + ' sapling seedling young';
-    if (stage === 'large') return base + ' mature large full grown';
-    return base + ' young garden';
-  }
-
-  function photoUrl(name, stage) {
-    var query = queryFor(name, stage).split(/\s+/).filter(Boolean).slice(0, 6).join(',');
-    var lock = hash(name + '-' + stage + '-' + VERSION) % 999999;
-    return 'https://loremflickr.com/1200/800/' + encodeURIComponent(query) + '?lock=' + lock;
-  }
-
-  function applyBackground(holder, name, stage) {
-    if (!holder || !name) return;
-    var url = photoUrl(name, stage || 'medium');
-    holder.style.backgroundImage = 'linear-gradient(rgba(0,0,0,.02),rgba(0,0,0,.02)), url("' + url + '")';
-    holder.style.backgroundSize = 'cover';
-    holder.style.backgroundPosition = 'center';
-    holder.style.backgroundRepeat = 'no-repeat';
-    var emoji = holder.querySelector('.plant-emoji-big,.slot-emoji');
-    if (emoji) emoji.style.display = 'none';
-  }
-
-  function forceCard(card) {
-    if (!card || card.getAttribute('data-photo-force') === VERSION) return;
-    var nameEl = card.querySelector('.card-name');
-    var name = nameEl ? nameEl.textContent.trim() : '';
-    var bg = card.querySelector('.img-bg');
-    var img = card.querySelector('img.real-photo');
-    if (!name || !bg) return;
-    card.setAttribute('data-photo-force', VERSION);
-    applyBackground(bg, name, 'medium');
-    if (img) {
-      img.src = photoUrl(name, 'medium');
-      img.onload = function () { img.classList.add('show'); };
-      img.onerror = function () { img.classList.remove('show'); };
-    }
-  }
-
-  function forceCards() {
-    var cards = document.querySelectorAll('.card[id^="card-"]');
-    for (var i = 0; i < cards.length; i++) forceCard(cards[i]);
-  }
-
-  function forceModal() {
-    var nameEl = document.getElementById('mt');
-    var name = nameEl ? nameEl.textContent.trim() : '';
-    if (!name) return;
-    var stages = ['small','medium','large'];
-    for (var i = 0; i < stages.length; i++) {
-      var stage = stages[i];
-      var slot = document.getElementById('mslot-' + stage);
-      var bg = slot ? slot.querySelector('.m-slot-bg') : null;
-      var img = document.getElementById('mimg-' + stage);
-      applyBackground(bg, name, stage);
-      if (img) {
-        img.src = photoUrl(name, stage);
-        img.onload = (function (el) { return function () { el.classList.add('show'); }; })(img);
-        img.onerror = (function (el) { return function () { el.classList.remove('show'); }; })(img);
-      }
-    }
-  }
-
-  function installCss() {
-    if (document.getElementById('photo-force-css')) return;
-    var style = document.createElement('style');
-    style.id = 'photo-force-css';
-    style.textContent = '.card-img .img-bg{background-size:cover!important;background-position:center!important}.card-img .plant-emoji-big{display:none!important}.m-slot-bg{background-size:cover!important;background-position:center!important}.m-slot-bg .slot-emoji{display:none!important}.real-photo.show{opacity:1!important}.m-slot-real.show{opacity:1!important}';
-    document.head.appendChild(style);
-  }
-
-  function boot() {
-    installCss();
-    forceCards();
-    forceModal();
-    setInterval(forceCards, 1200);
-    var pa = document.getElementById('pa');
-    if (pa && window.MutationObserver) {
-      new MutationObserver(function () { setTimeout(forceCards, 80); }).observe(pa, { childList: true, subtree: true });
-    }
-    var overlay = document.getElementById('overlay');
-    if (overlay && window.MutationObserver) {
-      new MutationObserver(function () { setTimeout(forceModal, 80); }).observe(overlay, { attributes: true, childList: true, subtree: true });
-    }
-    var oldOpen = window.openM;
-    if (typeof oldOpen === 'function' && !window.__photoForceOpenM) {
-      window.__photoForceOpenM = true;
-      window.openM = function () {
-        var result = oldOpen.apply(this, arguments);
-        setTimeout(forceModal, 120);
-        setTimeout(forceModal, 800);
-        return result;
-      };
-    }
-    window.__photoForceVersion = VERSION;
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  var SPECIAL={
+    'ערבה בוכיה':{small:'weeping willow sapling',medium:'young weeping willow tree',large:'large mature weeping willow tree'},
+    'ערבה בוכייה':{small:'weeping willow sapling',medium:'young weeping willow tree',large:'large mature weeping willow tree'},
+    'מנגו':{small:'mango sapling',medium:'young mango tree',large:'mature mango tree orchard'},
+    'תאנה':{small:'fig tree sapling',medium:'young fig tree',large:'mature fig tree'},
+    'שסק':{small:'loquat sapling',medium:'young loquat tree',large:'mature loquat tree'},
+    'שמיר':{small:'dill seedling',medium:'dill herb plant',large:'flowering dill plant'}
+  };
+  var mem={};
+  function plants(){try{return Array.isArray(P)?P:[]}catch(e){return[]}}
+  function byId(id){return plants().find(function(p){return String(p.id)===String(id)})||null}
+  function good(url){return /^https?:\/\//i.test(String(url||''))&&!/defaultImage|logo|icon|map|symbol|\.svg/i.test(url)}
+  function info(name){try{return typeof WIKI_PAGES!=='undefined'&&WIKI_PAGES?WIKI_PAGES[name]:null}catch(e){return null}}
+  function page(name){var w=info(name);return (w&&w.page)||FALLBACK_PAGES[name]||String(name||'Garden plant')}
+  function query(p,stage){var name=p&&p.name||'';if(SPECIAL[name]&&SPECIAL[name][stage])return SPECIAL[name][stage];var w=info(name);if(stage==='small'&&w&&w.small)return w.small;if(stage==='large'&&w&&w.large)return w.large;var base=page(name);if(stage==='small')return base+' sapling seedling young plant';if(stage==='large')return base+' mature large tree plant';return 'young '+base+' garden plant'}
+  async function json(url){var r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error(r.status);return r.json()}
+  async function pageImg(pg){var key='page:'+pg;if(key in mem)return mem[key];try{var data=await json('https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(pg)+'&prop=pageimages&pithumbsize=1200&format=json&origin=*');var first=Object.values(data.query&&data.query.pages||{})[0];var url=first&&first.thumbnail&&first.thumbnail.source;mem[key]=good(url)?url:null}catch(e){mem[key]=null}return mem[key]}
+  async function commons(q,used){var key='commons:'+q;if(key in mem&&!used.has(mem[key]))return mem[key];try{var data=await json('https://commons.wikimedia.org/w/api.php?action=query&list=search&srnamespace=6&srlimit=10&srsearch='+encodeURIComponent(q)+'&format=json&origin=*');var hits=(data.query&&data.query.search||[]).filter(function(h){return !/logo|icon|map|diagram|drawing|herbarium|scan|seed packet/i.test(h.title||'')});for(var i=0;i<hits.length;i++){var title=hits[i].title&&hits[i].title.indexOf('File:')===0?hits[i].title:'File:'+hits[i].title;var fi=await json('https://commons.wikimedia.org/w/api.php?action=query&titles='+encodeURIComponent(title)+'&prop=imageinfo&iiprop=url|mime&iiurlwidth=1200&format=json&origin=*');var obj=Object.values(fi.query&&fi.query.pages||{})[0];var ii=obj&&obj.imageinfo&&obj.imageinfo[0];var url=ii&&(ii.thumburl||ii.url);if(/^image\/(jpeg|png|webp)/i.test(ii&&ii.mime||'')&&good(url)&&!used.has(url)){mem[key]=url;return url}}}catch(e){}mem[key]=null;return null}
+  async function resolve(p,stage,used){stage=STAGES.indexOf(stage)>=0?stage:'medium';used=used||new Set();var name=p&&p.name||'';var key=name+':'+stage;if(key in mem&&!used.has(mem[key]))return mem[key];try{var ck=p?'custom_'+p.id+'_'+stage:'';if(ck&&typeof imgCache!=='undefined'&&good(imgCache[ck])&&!used.has(imgCache[ck]))return imgCache[ck]}catch(e){}var url=null;try{if(typeof fetchWikiImg==='function')url=await fetchWikiImg(name,stage)}catch(e){}if(!good(url)||used.has(url))url=await commons(query(p,stage),used);if(!good(url)||used.has(url))url=await pageImg(page(name));if(!good(url)||used.has(url))url=await commons(page(name),used);url=good(url)?url:null;mem[key]=url;try{if(url&&typeof imgCache!=='undefined')imgCache[name+'__'+stage]=url}catch(e){}return url}
+  function css(){if(document.getElementById('photo-force-css'))return;var s=document.createElement('style');s.id='photo-force-css';s.textContent='.card-img .plant-emoji-big,.m-slot-bg .slot-emoji{display:none!important}.card-img .img-bg,.m-slot-bg{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}.real-photo.show,.m-slot-real.show{opacity:1!important}.m-photos.stage-gallery{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}@media(max-width:768px){.m-photos.stage-gallery{grid-template-columns:1fr!important;height:auto!important}.m-photos.stage-gallery .m-slot{height:190px!important}}';document.head.appendChild(s)}
+  function bg(el,url){if(!el||!url)return;el.style.backgroundImage='url("'+url+'")';el.style.backgroundSize='cover';el.style.backgroundPosition='center'}
+  function show(img,url){if(!img||!url)return;img.classList.remove('show');img.onload=function(){img.classList.add('show')};img.onerror=function(){img.classList.remove('show')};img.src=url;if(img.complete&&img.naturalWidth>0)img.classList.add('show')}
+  function cardPlant(card){var id=(card&&card.id||'').replace('card-','');var p=byId(id);if(p)return p;var n=card&&card.querySelector('.card-name')&&card.querySelector('.card-name').textContent.trim();return n?{id:id,name:n}:null}
+  function forceCard(card){var p=cardPlant(card);if(!p)return;var rk=VERSION+':'+p.name;if(card.getAttribute('data-photo-force')===rk)return;card.setAttribute('data-photo-force',rk);var img=card.querySelector('img.real-photo');var holder=card.querySelector('.img-bg');resolve(p,'medium',new Set()).then(function(url){if(url){bg(holder,url);show(img,url)}})}
+  function cards(){document.querySelectorAll('.card[id^="card-"]').forEach(forceCard)}
+  function label(p){var photos=document.getElementById('mPhotos');if(photos)photos.classList.add('stage-gallery');STAGES.forEach(function(stage){var slot=document.getElementById('mslot-'+stage);var lab=slot&&slot.querySelector('.m-slot-lbl');var detail=p&&p.sizes&&p.sizes[stage]||'';if(lab)lab.innerHTML=LABELS[stage]+(detail?'<br><small>'+detail+'</small>':'')})}
+  function modal(id){var current=document.getElementById('mt')&&document.getElementById('mt').textContent.trim();var p=byId(id)||plants().find(function(x){return x.name===current})||(current?{name:current}:null);if(!p)return;label(p);var used=new Set();STAGES.reduce(function(pr,stage){return pr.then(async function(){var img=document.getElementById('mimg-'+stage);var holder=document.querySelector('#mslot-'+stage+' .m-slot-bg');var loader=document.getElementById('mload-'+stage);if(loader)loader.classList.add('show');var url=await resolve(p,stage,used);if(loader)loader.classList.remove('show');if(url){used.add(url);bg(holder,url);show(img,url)}})},Promise.resolve())}
+  function patch(){if(window.__photoForceOpenM)return;var old=window.openM;if(typeof old!=='function')return;window.__photoForceOpenM=true;window.openM=function(){var id=arguments[0];var r=old.apply(this,arguments);setTimeout(function(){modal(id)},100);setTimeout(function(){modal(id)},900);return r}}
+  function boot(){css();cards();modal();patch();setInterval(function(){patch();cards()},1400);var pa=document.getElementById('pa');if(pa&&window.MutationObserver&&!window.__photoForceObserver){window.__photoForceObserver=true;new MutationObserver(function(){setTimeout(cards,80)}).observe(pa,{childList:true,subtree:true})}window.__photoForceVersion=VERSION}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
