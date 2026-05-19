@@ -1,48 +1,62 @@
-(function(){
-  var VERSION='no-photo-overwrite-20260517';
+(function () {
+  var VERSION = 'no-modal-photo-logos-20260519';
 
-  function installCss(){
-    if(document.getElementById('photo-force-css'))return;
-    var style=document.createElement('style');
-    style.id='photo-force-css';
-    style.textContent='.real-photo.show,.m-slot-real.show{opacity:1!important}.card-img:has(.real-photo.show) .plant-emoji-big,.m-slot:has(.m-slot-real.show) .slot-emoji{display:none!important}.m-photos.stage-gallery{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}@media(max-width:768px){.m-photos.stage-gallery{grid-template-columns:1fr!important;height:auto!important}.m-photos.stage-gallery .m-slot{height:190px!important}}';
+  function installCss() {
+    if (document.getElementById('photo-force-css')) return;
+    var style = document.createElement('style');
+    style.id = 'photo-force-css';
+    style.textContent = [
+      '.card-img .plant-emoji-big,.card-img .img-bg,.card-img .size-tabs{display:none!important}',
+      '.card-img{background:#e6eddf!important}',
+      '.real-photo.show{opacity:1!important}',
+      '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}',
+      '#mPhotos *{display:none!important}'
+    ].join('');
     document.head.appendChild(style);
   }
 
-  function labelModal(){
-    var photos=document.getElementById('mPhotos');
-    if(photos)photos.classList.add('stage-gallery');
-    var labels={small:'צמח צעיר',medium:'בן 3-4',large:'צמח בוגר'};
-    ['small','medium','large'].forEach(function(stage){
-      var slot=document.getElementById('mslot-'+stage);
-      var label=slot&&slot.querySelector('.m-slot-lbl');
-      if(!label)return;
-      var old=label.querySelector('small');
-      label.innerHTML=labels[stage]+(old?'<br><small>'+old.textContent+'</small>':'');
-    });
+  function hideModalPhotos() {
+    var box = document.getElementById('mPhotos');
+    if (!box) return;
+    box.innerHTML = '';
+    box.className = 'm-photos modal-photos-removed';
+    box.setAttribute('aria-hidden', 'true');
+    box.style.display = 'none';
+    box.style.height = '0';
+    box.style.minHeight = '0';
+    box.style.margin = '0';
+    box.style.padding = '0';
+    box.style.border = '0';
+    box.style.overflow = 'hidden';
   }
 
-  function patchOpenModal(){
-    if(window.__photoForceOpenM)return;
-    var old=window.openM;
-    if(typeof old!=='function')return;
-    window.__photoForceOpenM=true;
-    window.openM=function(){
-      var result=old.apply(this,arguments);
-      setTimeout(labelModal,80);
-      setTimeout(labelModal,700);
+  function patchOpenModal() {
+    if (window.__photoForceOpenM) return;
+    var old = window.openM;
+    if (typeof old !== 'function') return;
+    window.__photoForceOpenM = true;
+    window.openM = function () {
+      var result = old.apply(this, arguments);
+      hideModalPhotos();
+      setTimeout(hideModalPhotos, 0);
+      setTimeout(hideModalPhotos, 80);
+      setTimeout(hideModalPhotos, 700);
+      if (result && typeof result.then === 'function') result.then(hideModalPhotos).catch(function () {});
       return result;
     };
   }
 
-  function boot(){
+  function boot() {
     installCss();
-    labelModal();
+    hideModalPhotos();
     patchOpenModal();
-    setInterval(function(){patchOpenModal();labelModal();},1500);
-    window.__photoForceVersion=VERSION;
+    setInterval(function () {
+      patchOpenModal();
+      hideModalPhotos();
+    }, 1500);
+    window.__photoForceVersion = VERSION;
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
