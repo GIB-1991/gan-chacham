@@ -1,5 +1,5 @@
 (function () {
-  var VERSION = 'card-wiki-photos-no-modal-20260520';
+  var VERSION = 'card-wiki-timeout-no-loader-20260521';
   var BAD_URL = /loremflickr|staticflickr|flickr\.com|flickr\.net|placekitten|defaultImage|logo|icon|map|diagram|symbol|\.svg/i;
 
   function plants() {
@@ -30,9 +30,15 @@
   }
 
   async function json(url) {
-    var response = await fetch(url, { cache: 'force-cache' });
-    if (!response.ok) throw new Error(response.status);
-    return response.json();
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 4500) : null;
+    try {
+      var response = await fetch(url, { cache: 'force-cache', signal: ctrl && ctrl.signal });
+      if (!response.ok) throw new Error(response.status);
+      return response.json();
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
   async function wikiImage(p) {
@@ -132,7 +138,7 @@
     var img = document.getElementById('cimg-' + id);
     var loader = document.getElementById('cload-' + id);
     if (!p || !img) return;
-    if (loader) loader.classList.add('show');
+    if (loader) loader.classList.remove('show');
     var url = await resolve(p);
     if (loader) loader.classList.remove('show');
     show(img, url);
@@ -167,6 +173,7 @@
       '.card-img .plant-emoji-big,.card-img .img-bg,.card-img .size-tabs{display:none!important}',
       '.card-img{background:#e6eddf!important}',
       '.card-img .real-photo.show{opacity:1!important;display:block!important}',
+      '.photo-loading,.photo-loading.show{display:none!important;opacity:0!important}',
       '.card-img.no-real-photo{display:flex!important;align-items:center!important;justify-content:center!important;background:#e6eddf!important}',
       '.card-photo-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#38513d;font-size:.9rem;font-weight:800;background:#e6eddf;z-index:2}',
       '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}',
