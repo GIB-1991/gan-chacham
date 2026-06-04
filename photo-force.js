@@ -1,5 +1,5 @@
 (function () {
-  var VERSION = 'commons-visible-plant-photos-20260604';
+  var VERSION = 'wiki-first-plant-photos-20260604';
   var STORE_KEY = 'gan_chacham_commons_photo_map_' + VERSION;
   var BAD_URL = /loremflickr|staticflickr|flickr\.com|flickr\.net|placekitten|defaultImage|logo|icon|map|diagram|symbol|\.svg/i;
   var BAD_TITLE = /logo|icon|map|diagram|symbol|drawing|illustration|botanical illustration|scan|herbarium|fruit bowl|food|recipe|market|plate|child|baby|person|people|statue|cat|dog|animal/i;
@@ -121,6 +121,15 @@
     if (loading[key]) return loading[key];
 
     loading[key] = (async function () {
+      try {
+        var wikiPhoto = await wikipediaImage(p);
+        if (wikiPhoto) {
+          photoMap[key] = wikiPhoto;
+          saveMap();
+          return wikiPhoto;
+        }
+      } catch (e) {}
+
       var terms = searchTerms(p);
       for (var i = 0; i < terms.length; i++) {
         try {
@@ -133,16 +142,9 @@
         } catch (e) {}
       }
 
-      try {
-        var wikiPhoto = await wikipediaImage(p);
-        photoMap[key] = wikiPhoto || null;
-        saveMap();
-        return photoMap[key];
-      } catch (e) {
-        photoMap[key] = null;
-        saveMap();
-        return null;
-      }
+      photoMap[key] = null;
+      saveMap();
+      return null;
     })();
 
     return loading[key];
