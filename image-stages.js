@@ -1,11 +1,12 @@
 (function () {
-  var VERSION = 'modal-only-no-photo-strip-20260521';
+  var VERSION = 'hide-alerts-bar-20260604';
 
   function installCss() {
     if (document.getElementById('modal-only-photo-strip-css')) return;
     var style = document.createElement('style');
     style.id = 'modal-only-photo-strip-css';
     style.textContent = [
+      '.alerts-bar{display:none!important}',
       '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}',
       '#mPhotos *{display:none!important}',
       '.modal .m-info{padding-top:28px!important}',
