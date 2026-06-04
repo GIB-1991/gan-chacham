@@ -1,239 +1,218 @@
 (function () {
-  var VERSION = 'wiki-first-plant-photos-20260604';
-  var STORE_KEY = 'gan_chacham_commons_photo_map_' + VERSION;
-  var BAD_URL = /loremflickr|staticflickr|flickr\.com|flickr\.net|placekitten|defaultImage|logo|icon|map|diagram|symbol|\.svg/i;
-  var BAD_TITLE = /logo|icon|map|diagram|symbol|drawing|illustration|botanical illustration|scan|herbarium|fruit bowl|food|recipe|market|plate|child|baby|person|people|statue|cat|dog|animal/i;
-  var GOOD_TITLE = /tree|plant|shrub|sapling|seedling|vine|flower|leaves|leaf|garden|orchard|grove|field|bloom|trunk|foliage|habit|cultivated/i;
-  var loading = {};
-  var photoMap = {};
+  var VERSION = 'excel-garden-photo-force-20260604';
+  var RESET_PREFIX = 'gan_chacham_excel_initial_view_';
 
-  try {
-    photoMap = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {};
-  } catch (e) {
-    photoMap = {};
+  var EXCEL_NAMES = [
+    'ערבה בוכיה',
+    'תפוז טבורי',
+    'לימון ננסי',
+    'פפאיה',
+    'שזיף פיסרדי',
+    'אבוקדו',
+    'מנגו',
+    'פקאן',
+    'צפצפה',
+    'נקטרינה',
+    'תות עץ',
+    'תפוח פינק ליידי',
+    'אלה סינית',
+    'פומלה',
+    'שקד',
+    'מגנוליה גדולת פרחים',
+    'גודגדן',
+    'פטל',
+    'אוכמניות',
+    'דשא יפני',
+    'דשא קוקויה',
+    'ויסטריה'
+  ];
+
+  var EXCEL_FLOORS = {
+    'ערבה בוכיה': 'קומה עליונה',
+    'תפוז טבורי': 'קומה עליונה',
+    'לימון ננסי': 'קומה עליונה',
+    'פפאיה': 'קומה עליונה',
+    'שזיף פיסרדי': 'קומה עליונה',
+    'אבוקדו': 'קומה תחתונה',
+    'מנגו': 'קומה תחתונה',
+    'פקאן': 'קומה תחתונה',
+    'צפצפה': 'קומה תחתונה',
+    'נקטרינה': 'קומה תחתונה',
+    'תות עץ': 'קומה תחתונה',
+    'תפוח פינק ליידי': 'קומה תחתונה',
+    'אלה סינית': 'קומה תחתונה',
+    'פומלה': 'קומה תחתונה',
+    'שקד': 'קומה תחתונה',
+    'מגנוליה גדולת פרחים': 'קומה תחתונה',
+    'גודגדן': 'קומה תחתונה',
+    'פטל': 'נספחים',
+    'אוכמניות': 'נספחים',
+    'דשא יפני': 'נספחים',
+    'דשא קוקויה': 'נספחים',
+    'ויסטריה': 'נספחים'
+  };
+
+  var PLANT_PHOTOS = {
+    'ערבה בוכיה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Salix_babylonica_in_Golden_Valley_Tree_Park%2C_May_2022.jpg/960px-Salix_babylonica_in_Golden_Valley_Tree_Park%2C_May_2022.jpg',
+    'תפוז טבורי': 'https://upload.wikimedia.org/wikipedia/commons/c/c4/Sapindales_-_Citrus_sinensis_-_9.jpg',
+    'לימון ננסי': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Schnee_Zitrone_Citrus_%C3%97_limon_1.JPG/960px-Schnee_Zitrone_Citrus_%C3%97_limon_1.JPG',
+    'פפאיה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Carica_papaya_14_7_2012.jpg/960px-Carica_papaya_14_7_2012.jpg',
+    'שזיף פיסרדי': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/20140317Prunus_cerasifera_Hockenheimer_Rheinbogen5.jpg/960px-20140317Prunus_cerasifera_Hockenheimer_Rheinbogen5.jpg',
+    'אבוקדו': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Persea_americana_%28Avocado%29_tree_in_RDA%2C_Bogra_05.jpg/960px-Persea_americana_%28Avocado%29_tree_in_RDA%2C_Bogra_05.jpg',
+    'מנגו': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Mango_tree_Kerala_in_full_bloom.jpg/960px-Mango_tree_Kerala_in_full_bloom.jpg',
+    'פקאן': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Carya_illinoinensis_%28pecan_tree%29_1_%2824790682337%29.jpg/960px-Carya_illinoinensis_%28pecan_tree%29_1_%2824790682337%29.jpg',
+    'צפצפה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Populus_alba_tree_and_reflection_of_the_Orb_Aqueduct_cf08.jpg/960px-Populus_alba_tree_and_reflection_of_the_Orb_Aqueduct_cf08.jpg',
+    'נקטרינה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Starr-190322-6367-Prunus_persica_var_persica-peach_and_nectarine_trees_flowering_in_orchard-Hawea_Pl_Olinda-Maui_%2848296185457%29.jpg/960px-Starr-190322-6367-Prunus_persica_var_persica-peach_and_nectarine_trees_flowering_in_orchard-Hawea_Pl_Olinda-Maui_%2848296185457%29.jpg',
+    'תות עץ': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Morus_sp._02.jpg/960px-Morus_sp._02.jpg',
+    'תפוח פינק ליידי': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Tree_with_red_apples_in_Barkedal_4.jpg/960px-Tree_with_red_apples_in_Barkedal_4.jpg',
+    'אלה סינית': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Pistacia_chinensis_%28Anacardiaceae%29_%28tree%29.JPG/960px-Pistacia_chinensis_%28Anacardiaceae%29_%28tree%29.JPG',
+    'פומלה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Trauttmansdorff_gardens_-_Citrus_x_paradisi_02.JPG/960px-Trauttmansdorff_gardens_-_Citrus_x_paradisi_02.JPG',
+    'שקד': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Shkediya02_ST_04.jpg/960px-Shkediya02_ST_04.jpg',
+    'מגנוליה גדולת פרחים': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Magnolia_grandiflora_%22Sempreverde%22.jpg/960px-Magnolia_grandiflora_%22Sempreverde%22.jpg',
+    'גודגדן': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Prunus_avium_RF.jpg/960px-Prunus_avium_RF.jpg',
+    'פטל': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Framboise_Margy_3.jpg/960px-Framboise_Margy_3.jpg',
+    'אוכמניות': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Vaccinium_corymbosum_NBG_LR.jpg/960px-Vaccinium_corymbosum_NBG_LR.jpg',
+    'דשא יפני': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Ophiopogon_japonicus_at_Coker_Arboretum.jpg/960px-Ophiopogon_japonicus_at_Coker_Arboretum.jpg',
+    'דשא קוקויה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Pennisetum_clandestinum_pasture.jpg/960px-Pennisetum_clandestinum_pasture.jpg',
+    'ויסטריה': 'https://commons.wikimedia.org/wiki/Special:FilePath/Wisteria%20sinensis.jpg?width=900'
+  };
+
+  function cleanName(name) {
+    return String(name || '').replace(/\(X?\d+\)/gi, '').replace(/\s+/g, ' ').trim();
   }
 
   function plants() {
-    try { return typeof P !== 'undefined' && Array.isArray(P) ? P : []; }
-    catch (e) { return []; }
+    try { return Array.isArray(P) ? P : []; } catch (e) { return []; }
   }
 
-  function byId(id) {
-    return plants().find(function (p) { return String(p.id) === String(id); }) || null;
-  }
-
-  function wiki(name) {
-    try { return typeof WIKI_PAGES !== 'undefined' && WIKI_PAGES && WIKI_PAGES[name] ? WIKI_PAGES[name] : {}; }
-    catch (e) { return {}; }
-  }
-
-  function safeUrl(url) {
-    url = String(url || '');
-    return /^https?:\/\//i.test(url) && !BAD_URL.test(url);
-  }
-
-  function saveMap() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(photoMap)); } catch (e) {}
-  }
-
-  function keyForPlant(p) {
-    return p && (p.name || p.id) ? String(p.name || p.id) : '';
-  }
-
-  function searchTerms(p) {
-    var info = wiki(p.name);
-    var terms = [];
-    if (info.large) terms.push(info.large);
-    if (info.page) {
-      terms.push(info.page + ' whole plant');
-      terms.push(info.page + ' tree');
-      terms.push(info.page + ' shrub');
-    }
-    terms.push(p.name + ' plant');
-    return terms.filter(function (term, index, arr) {
-      return term && arr.indexOf(term) === index;
-    });
-  }
-
-  async function jsonWithTimeout(url) {
-    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 5000) : null;
+  function catalog() {
     try {
-      var response = await fetch(url, { cache: 'force-cache', signal: ctrl && ctrl.signal });
-      if (!response.ok) throw new Error(response.status);
-      return response.json();
-    } finally {
-      if (timer) clearTimeout(timer);
+      if (Array.isArray(CATALOG_ALL) && CATALOG_ALL.length) return CATALOG_ALL;
+      return plants();
+    } catch (e) {
+      return plants();
     }
   }
 
-  function titleScore(title) {
-    title = String(title || '');
-    if (BAD_TITLE.test(title)) return -100;
-    var score = 0;
-    if (GOOD_TITLE.test(title)) score += 12;
-    if (/\.(jpg|jpeg|png|webp)$/i.test(title)) score += 4;
-    if (/fruit/i.test(title)) score -= 2;
-    return score;
+  function clone(obj) {
+    return JSON.parse(JSON.stringify(obj || {}));
   }
 
-  async function commonsImage(query) {
-    var searchUrl = 'https://commons.wikimedia.org/w/api.php?action=query&list=search&srnamespace=6&srlimit=12&srsearch=' + encodeURIComponent(query) + '&format=json&origin=*';
-    var searchData = await jsonWithTimeout(searchUrl);
-    var results = searchData.query && searchData.query.search || [];
-    var candidates = results
-      .filter(function (item) { return /\.(jpg|jpeg|png|webp)$/i.test(item.title || '') && !BAD_TITLE.test(item.title || ''); })
-      .sort(function (a, b) { return titleScore(b.title) - titleScore(a.title); })
-      .slice(0, 4);
-    if (!candidates.length) return null;
+  function findBase(name) {
+    var clean = cleanName(name);
+    var all = catalog();
+    return all.find(function (p) { return cleanName(p.name) === clean; }) ||
+      all.find(function (p) {
+        var n = cleanName(p.name);
+        return n && (clean.includes(n) || n.includes(clean));
+      }) ||
+      null;
+  }
 
-    var titles = candidates.map(function (item) { return item.title; }).join('|');
-    var infoUrl = 'https://commons.wikimedia.org/w/api.php?action=query&titles=' + encodeURIComponent(titles) + '&prop=imageinfo&iiprop=url&iiurlwidth=900&format=json&origin=*';
-    var infoData = await jsonWithTimeout(infoUrl);
-    var pages = Object.values(infoData.query && infoData.query.pages || {});
+  function fallbackPlant(name, index) {
+    return {
+      id: 9000 + index,
+      name: name,
+      type: 'ornamental',
+      bg: 'ornamental',
+      lbl: 'צמח',
+      e: '🌿',
+      floor: EXCEL_FLOORS[name] || 'נספחים',
+      prune: null, pm: [], pi: null, pmth: null,
+      fert: null, fm: [], supp: null, sm: [],
+      rules: null, crit: null,
+      waterSummer: null, waterWinter: null, waterType: null,
+      light: 'שמש מלאה', lightAlt: null, climate: [],
+      indoor: false, geo: null, winter: null, summer: null
+    };
+  }
 
-    for (var i = 0; i < candidates.length; i++) {
-      var wanted = candidates[i].title.replace(/^File:/, '');
-      var page = pages.find(function (entry) {
-        return String(entry.title || '').replace(/^File:/, '') === wanted;
-      });
-      var info = page && page.imageinfo && page.imageinfo[0];
-      var url = info && (info.thumburl || info.url);
-      if (safeUrl(url)) return url;
+  function buildExcelPlants() {
+    var used = {};
+    return EXCEL_NAMES.map(function (name, index) {
+      var plant = clone(findBase(name) || fallbackPlant(name, index));
+      plant.name = name;
+      plant.floor = EXCEL_FLOORS[name] || plant.floor || 'נספחים';
+      plant.photoUrl = PLANT_PHOTOS[name] || plant.photoUrl || null;
+      if (used[String(plant.id)]) plant.id = 9000 + index;
+      used[String(plant.id)] = true;
+      return plant;
+    });
+  }
+
+  function replaceVisiblePlants(excelPlants) {
+    var list = plants();
+    if (!list.length) return;
+    list.length = 0;
+    excelPlants.forEach(function (plant) { list.push(plant); });
+    if (typeof updCounts === 'function') updCounts();
+    if (typeof renderAlerts === 'function') renderAlerts();
+    if (typeof render === 'function') render();
+  }
+
+  async function syncInitialGarden(oldPlants, excelPlants) {
+    if (typeof currentUser === 'undefined' || !currentUser || !currentUser.id) return;
+    if (typeof dbDeletePlant !== 'function' || typeof dbSavePlant !== 'function') return;
+    var key = RESET_PREFIX + VERSION + '_' + currentUser.id;
+    if (localStorage.getItem(key)) return;
+    var keep = {};
+    excelPlants.forEach(function (plant) { keep[String(plant.id)] = true; });
+    for (var i = 0; i < oldPlants.length; i++) {
+      if (!keep[String(oldPlants[i].id)]) await dbDeletePlant(oldPlants[i].id);
     }
-    return null;
-  }
-
-  async function wikipediaImage(p) {
-    var page = wiki(p.name).page;
-    if (!page) return null;
-    var url = 'https://en.wikipedia.org/w/api.php?action=query&titles=' + encodeURIComponent(page) + '&prop=pageimages&pithumbsize=900&format=json&origin=*';
-    var data = await jsonWithTimeout(url);
-    var pages = Object.values(data.query && data.query.pages || {});
-    var source = pages[0] && pages[0].thumbnail && pages[0].thumbnail.source;
-    return safeUrl(source) ? source : null;
-  }
-
-  async function resolvePlantPhoto(p) {
-    var key = keyForPlant(p);
-    if (!key) return null;
-    if (photoMap[key] !== undefined) return photoMap[key];
-    if (loading[key]) return loading[key];
-
-    loading[key] = (async function () {
-      try {
-        var wikiPhoto = await wikipediaImage(p);
-        if (wikiPhoto) {
-          photoMap[key] = wikiPhoto;
-          saveMap();
-          return wikiPhoto;
-        }
-      } catch (e) {}
-
-      var terms = searchTerms(p);
-      for (var i = 0; i < terms.length; i++) {
-        try {
-          var found = await commonsImage(terms[i]);
-          if (found) {
-            photoMap[key] = found;
-            saveMap();
-            return found;
-          }
-        } catch (e) {}
-      }
-
-      photoMap[key] = null;
-      saveMap();
-      return null;
-    })();
-
-    return loading[key];
-  }
-
-  function clearGenericImage(img) {
-    if (!img) return;
-    img.classList.remove('show');
-    img.removeAttribute('src');
-    var box = img.closest('.card-img');
-    if (box) {
-      box.classList.remove('no-real-photo');
-      box.classList.add('photo-pending');
-      box.querySelectorAll('.card-photo-empty').forEach(function (node) { node.remove(); });
+    for (var j = 0; j < excelPlants.length; j++) {
+      await dbSavePlant(excelPlants[j]);
     }
+    localStorage.setItem(key, 'done');
   }
 
-  function showImage(img, url) {
-    if (!img || !safeUrl(url)) return;
-    var box = img.closest('.card-img');
-    if (box) {
-      box.classList.remove('photo-pending');
-      box.classList.remove('no-real-photo');
-      box.querySelectorAll('.card-photo-empty').forEach(function (node) { node.remove(); });
+  async function forceExcelInitialGarden(shouldSync) {
+    var list = plants();
+    if (!list.length) return;
+    var oldPlants = list.slice();
+    var excelPlants = buildExcelPlants();
+    var key = '';
+    try {
+      key = currentUser && currentUser.id ? RESET_PREFIX + VERSION + '_' + currentUser.id : '';
+    } catch (e) {}
+    if (!key || !localStorage.getItem(key)) {
+      replaceVisiblePlants(excelPlants);
+      if (shouldSync) await syncInitialGarden(oldPlants, excelPlants);
     }
-    img.onload = function () { img.classList.add('show'); };
-    img.onerror = function () { img.classList.remove('show'); };
+    applyPhotos();
+  }
+
+  function photoFor(name) {
+    return PLANT_PHOTOS[cleanName(name)] || null;
+  }
+
+  function setImg(img, url) {
+    if (!img || !url) return;
     img.src = url;
-    if (img.complete && img.naturalWidth > 0) img.classList.add('show');
-  }
-
-  function markMissing(img) {
-    if (!img) return;
-    img.classList.remove('show');
-    img.removeAttribute('src');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.classList.add('show');
     var box = img.closest('.card-img');
     if (box) {
-      box.classList.remove('photo-pending');
-      box.classList.add('no-real-photo');
-      if (!box.querySelector('.card-photo-empty')) {
-        var note = document.createElement('div');
-        note.className = 'card-photo-empty';
-        note.textContent = '\u05d0\u05d9\u05df \u05ea\u05de\u05d5\u05e0\u05d4 \u05de\u05ea\u05d0\u05d9\u05de\u05d4';
-        box.appendChild(note);
-      }
+      box.classList.remove('photo-pending', 'no-real-photo');
+      box.querySelectorAll('.card-photo-empty,.photo-loading').forEach(function (node) {
+        node.style.display = 'none';
+      });
     }
   }
 
-  function hideLoaders() {
-    document.querySelectorAll('.photo-loading,.photo-loading.show').forEach(function (loader) {
-      loader.classList.remove('show');
-      loader.style.display = 'none';
-      loader.style.opacity = '0';
-    });
+  function plantById(id) {
+    return plants().find(function (plant) { return String(plant.id) === String(id); }) || null;
   }
 
-  function loadCard(id) {
-    var p = byId(id);
-    var img = document.getElementById('cimg-' + id);
-    if (!p || !img) return;
-
-    var key = keyForPlant(p);
-    if (photoMap[key] && safeUrl(photoMap[key])) {
-      showImage(img, photoMap[key]);
-      return;
-    }
-    if (photoMap[key] === null) {
-      markMissing(img);
-      return;
-    }
-
-    clearGenericImage(img);
-    resolvePlantPhoto(p).then(function (url) {
-      var current = document.getElementById('cimg-' + id);
-      if (url) showImage(current, url);
-      else markMissing(current);
+  function applyPhotos() {
+    document.querySelectorAll('img.real-photo[id^="cimg-"]').forEach(function (img) {
+      var id = img.id.replace('cimg-', '');
+      var plant = plantById(id);
+      var url = plant && (plant.photoUrl || photoFor(plant.name));
+      if (url) setImg(img, url);
     });
-  }
-
-  function visibleCards() {
-    var cards = document.querySelectorAll('img.real-photo[id^="cimg-"]');
-    cards.forEach(function (img) {
-      if (!img.__photoObserverAttached && window.IntersectionObserver && window.__photoForceIO) {
-        img.__photoObserverAttached = true;
-        window.__photoForceIO.observe(img);
-      } else if (!window.IntersectionObserver) {
-        loadCard(img.id.replace('cimg-', ''));
-      }
-    });
+    hideModalPhotos();
   }
 
   function hideModalPhotos() {
@@ -241,119 +220,75 @@
     if (!box) return;
     box.innerHTML = '';
     box.className = 'm-photos modal-photos-removed';
-    box.setAttribute('aria-hidden', 'true');
     box.style.display = 'none';
     box.style.height = '0';
-    box.style.minHeight = '0';
-    box.style.margin = '0';
-    box.style.padding = '0';
-    box.style.border = '0';
-    box.style.overflow = 'hidden';
   }
 
-  function installCss() {
-    if (document.getElementById('photo-force-css')) return;
+  function injectCss() {
+    if (document.getElementById('excel-photo-force-css')) return;
     var style = document.createElement('style');
-    style.id = 'photo-force-css';
+    style.id = 'excel-photo-force-css';
     style.textContent = [
-      '.card-img .plant-emoji-big,.card-img .img-bg,.card-img .size-tabs{display:none!important}',
-      '.card-img{background:#dfe9d8!important}',
-      '.card-img.photo-pending::after{content:"\\05d8\\05d5\\05e2\\05df \\05ea\\05de\\05d5\\05e0\\05d4...";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#244b33;font-weight:800;font-size:.9rem}',
-      '.card-img.no-real-photo::after{content:"";display:none}',
-      '.card-photo-empty{position:absolute;inset:0;display:flex!important;align-items:center;justify-content:center;color:#244b33;font-weight:800;font-size:.9rem;background:#dfe9d8}',
-      '.card-img .real-photo.show{opacity:1!important;display:block!important}',
-      '.photo-loading,.photo-loading.show{display:none!important;opacity:0!important}',
-      '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}',
-      '#mPhotos *{display:none!important}'
-    ].join('');
+      '.card-img .real-photo.show{display:block!important;opacity:1!important;width:100%!important;height:100%!important;object-fit:cover!important}',
+      '.photo-loading,.photo-loading.show,.card-photo-empty{display:none!important}',
+      '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}'
+    ].join('\n');
     document.head.appendChild(style);
   }
 
-  function patchApis() {
-    window.fetchWikiImg = function (name) {
-      var p = plants().find(function (item) { return item.name === name; }) || { name: name, type: 'ornamental' };
-      return resolvePlantPhoto(p);
+  function patchRender() {
+    if (window.__excelPhotoForceRender || typeof render !== 'function') return;
+    var originalRender = render;
+    window.__excelPhotoForceRender = true;
+    render = function () {
+      var result = originalRender.apply(this, arguments);
+      setTimeout(applyPhotos, 0);
+      setTimeout(applyPhotos, 200);
+      return result;
     };
-    window.tryLoadImg = function (id, size, ok, fail) {
-      var p = byId(id);
-      if (!p) {
-        if (fail) fail();
-        return;
-      }
-      resolvePlantPhoto(p).then(function (url) {
-        if (url && ok) ok(url);
-        else if (fail) fail();
-      });
-    };
-    window.loadCardImg = function (id) { loadCard(id); };
   }
 
-  function patchOpenModal() {
-    if (window.__photoForceOpenM) return;
-    var old = window.openM;
-    if (typeof old !== 'function') return;
-    window.__photoForceOpenM = true;
-    window.openM = function () {
-      var result = old.apply(this, arguments);
+  function patchModal() {
+    if (window.__excelPhotoForceOpenM || typeof openM !== 'function') return;
+    var originalOpenM = openM;
+    window.__excelPhotoForceOpenM = true;
+    openM = function () {
+      var result = originalOpenM.apply(this, arguments);
       hideModalPhotos();
       setTimeout(hideModalPhotos, 0);
-      setTimeout(hideModalPhotos, 80);
-      setTimeout(hideModalPhotos, 700);
-      if (result && typeof result.then === 'function') result.then(hideModalPhotos).catch(function () {});
+      setTimeout(hideModalPhotos, 200);
       return result;
     };
   }
 
-  function patchRender() {
-    if (window.__photoForceRender) return;
-    var old = window.render;
-    if (typeof old !== 'function') return;
-    window.__photoForceRender = true;
-    window.render = function () {
-      var result = old.apply(this, arguments);
-      setTimeout(visibleCards, 80);
-      return result;
+  try {
+    window.fetchWikiImg = function (name) {
+      return Promise.resolve(photoFor(name));
     };
-  }
+  } catch (e) {}
 
-  function observeArea() {
-    if (window.IntersectionObserver && !window.__photoForceIO) {
-      window.__photoForceIO = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) loadCard(entry.target.id.replace('cimg-', ''));
-        });
-      }, { rootMargin: '500px 0px' });
+  try {
+    if (typeof onUserLoggedIn === 'function' && !window.__excelPhotoForceLogin) {
+      var originalLogin = onUserLoggedIn;
+      window.__excelPhotoForceLogin = true;
+      onUserLoggedIn = async function () {
+        await originalLogin.apply(this, arguments);
+        await forceExcelInitialGarden(true);
+      };
     }
+  } catch (e) {}
 
-    var area = document.getElementById('pa');
-    if (!area || window.__photoForceObserver) return;
-    window.__photoForceObserver = true;
-    new MutationObserver(function () { setTimeout(visibleCards, 80); }).observe(area, { childList: true, subtree: true });
-  }
-
-  function ready() {
-    try { return typeof P !== 'undefined' && Array.isArray(P) && typeof window.openM === 'function'; }
-    catch (e) { return false; }
-  }
-
-  var tries = 0;
   function boot() {
-    installCss();
-    hideLoaders();
-    hideModalPhotos();
-    if (!ready()) {
-      if (++tries < 240) setTimeout(boot, 100);
-      return;
-    }
-    patchApis();
-    patchOpenModal();
+    injectCss();
     patchRender();
-    observeArea();
-    visibleCards();
-    setInterval(hideLoaders, 1200);
-    window.__photoForceVersion = VERSION;
+    patchModal();
+    forceExcelInitialGarden(false);
+    applyPhotos();
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  boot();
+  setTimeout(boot, 300);
+  setTimeout(boot, 1200);
+  setInterval(applyPhotos, 3000);
+  window.__excelPhotoForceVersion = VERSION;
 })();
