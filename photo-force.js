@@ -1,6 +1,10 @@
 (function () {
-  var VERSION = 'excel-garden-no-floors-20260604';
-  var NAMES = ['ערבה בוכיה','תפוז טבורי','לימון ננסי','פפאיה','שזיף פיסרדי','אבוקדו','מנגו','פקאן','צפצפה','נקטרינה','תות עץ','תפוח פינק ליידי','אלה סינית','פומלה','שקד','מגנוליה גדולת פרחים','גודגדן','פטל','אוכמניות','דשא יפני','דשא קוקויה','ויסטריה'];
+  var VERSION = 'gardenia-inspired-no-floors-20260605';
+  var NAMES = [
+    'ערבה בוכיה','תפוז טבורי','לימון ננסי','פפאיה','שזיף פיסרדי','אבוקדו','מנגו','פקאן',
+    'צפצפה','נקטרינה','תות עץ','תפוח פינק ליידי','אלה סינית','פומלה','שקד','מגנוליה גדולת פרחים',
+    'גודגדן','פטל','אוכמניות','דשא יפני','דשא קוקויה','ויסטריה'
+  ];
   var PHOTOS = {
     'ערבה בוכיה':'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Salix_babylonica_in_Golden_Valley_Tree_Park%2C_May_2022.jpg/960px-Salix_babylonica_in_Golden_Valley_Tree_Park%2C_May_2022.jpg',
     'תפוז טבורי':'https://upload.wikimedia.org/wikipedia/commons/c/c4/Sapindales_-_Citrus_sinensis_-_9.jpg',
@@ -27,7 +31,11 @@
   };
 
   function clean(name) {
-    return String(name || '').normalize('NFKC').replace(/[\u200e\u200f\u202a-\u202e]/g, '').replace(/\(X?\d+\)/gi, '').replace(/\s+/g, ' ').trim();
+    return String(name || '').normalize('NFKC')
+      .replace(/[\u200e\u200f\u202a-\u202e]/g, '')
+      .replace(/\(X?\d+\)/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
   function list() { try { return Array.isArray(P) ? P : []; } catch (e) { return []; } }
   function catalog() { try { return Array.isArray(CATALOG_ALL) ? CATALOG_ALL : list(); } catch (e) { return list(); } }
@@ -76,7 +84,40 @@
     if (document.getElementById('excel-photo-force-css')) return;
     var style = document.createElement('style');
     style.id = 'excel-photo-force-css';
-    style.textContent = '.alerts-bar,.floor-hdr,#floor-toggle{display:none!important}.card-img .real-photo.show{display:block!important;opacity:1!important;width:100%!important;height:100%!important;object-fit:cover!important}.photo-loading,.photo-loading.show,.card-photo-empty{display:none!important}#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}';
+    style.textContent = [
+      ':root{--gc-forest:#214a32;--gc-leaf:#6f9d5f;--gc-sage:#dfe9d4;--gc-mint:#f2f7ed;--gc-paper:#fffdf8;--gc-cream:#f7f1e6;--gc-clay:#a66a43;--gc-gold:#d59b35;--gc-ink:#243126;--gc-muted:#6f7b70;--gc-line:#e2dacb}',
+      'html,body{background:linear-gradient(180deg,#fffdf8 0,#f7f1e6 270px,#edf5e8 100%)!important;color:var(--gc-ink)!important}',
+      'body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(135deg,rgba(111,157,95,.08),transparent 38%),linear-gradient(180deg,transparent 0,rgba(166,106,67,.06) 100%)}',
+      '.header{background:linear-gradient(135deg,#fffdf8 0,#f6f1e7 52%,#e8f1df 100%)!important;border-bottom:1px solid var(--gc-line)!important;box-shadow:0 8px 30px rgba(33,74,50,.08)!important;padding:18px 34px 16px!important}',
+      '.header::after{height:4px!important;background:linear-gradient(90deg,var(--gc-forest),var(--gc-leaf),var(--gc-gold),var(--gc-clay))!important}',
+      '.header-title h1{font-family:"Frank Ruhl Libre",serif!important;color:var(--gc-forest)!important;font-size:2.15rem!important;line-height:1!important;font-weight:900!important}',
+      '.header-title h1 span{color:var(--gc-clay)!important}.header-title p{color:var(--gc-muted)!important;font-weight:600!important}',
+      '.month-pill,#user-header-info>div,.notif-bell{border-radius:999px!important}.month-pill{background:#fff7e8!important;border:1px solid #ead8bd!important;color:var(--gc-forest)!important}',
+      '#user-header-info>div,.notif-bell{background:var(--gc-forest)!important;border-color:var(--gc-forest)!important;box-shadow:0 10px 22px rgba(33,74,50,.18)!important}',
+      '.alerts-bar,.floor-hdr,#floor-toggle{display:none!important}',
+      '.layout{max-width:1460px!important;gap:24px!important;padding:0 28px 36px!important;margin-top:22px!important}',
+      '.sidebar{background:rgba(255,253,248,.96)!important;border:1px solid var(--gc-line)!important;border-radius:10px!important;box-shadow:0 16px 42px rgba(33,74,50,.1)!important;padding:20px 15px!important}',
+      '.sb-ttl{color:var(--gc-clay)!important;font-size:.76rem!important;font-weight:900!important;text-transform:none!important;margin-bottom:9px!important}',
+      '.sb-inp{background:#fff!important;border:1px solid var(--gc-line)!important;border-radius:10px!important;color:var(--gc-ink)!important;padding:11px 13px!important;font-weight:700!important}',
+      '.flt{border-radius:10px!important;padding:10px 12px!important;margin-bottom:6px!important;font-weight:850!important;color:var(--gc-ink)!important}',
+      '.flt:hover{background:#f3eadc!important}.flt.on{background:var(--gc-forest)!important;color:#fff!important;box-shadow:0 10px 24px rgba(33,74,50,.18)!important}',
+      '.grid{grid-template-columns:repeat(auto-fill,minmax(286px,1fr))!important;gap:24px!important}',
+      '.card{background:var(--gc-paper)!important;border:1px solid var(--gc-line)!important;border-radius:10px!important;overflow:hidden!important;box-shadow:0 14px 34px rgba(37,54,41,.1)!important}',
+      '.card:hover{transform:translateY(-4px)!important;border-color:#cdbcaa!important;box-shadow:0 22px 52px rgba(37,54,41,.16)!important}',
+      '.card.alert{border-color:#d8b758!important;box-shadow:0 16px 38px rgba(149,111,31,.16)!important}',
+      '.card-img{height:250px!important;background:#e5eddf!important;border-bottom:1px solid #eadfce!important}.real-photo{object-fit:cover!important;background:#e5eddf!important}',
+      '.card-img .real-photo.show{display:block!important;opacity:1!important;width:100%!important;height:100%!important;object-fit:cover!important}.photo-loading,.photo-loading.show,.card-photo-empty{display:none!important}',
+      '.card-body{padding:18px 18px 20px!important}.card-name{font-family:"Frank Ruhl Libre",serif!important;color:var(--gc-forest)!important;font-size:1.48rem!important;line-height:1.08!important;margin-bottom:8px!important}',
+      '.card-type{background:#f0e2ce!important;color:var(--gc-clay)!important;border-radius:999px!important;padding:4px 12px!important;font-weight:900!important}',
+      '.care-row{background:var(--gc-mint)!important;border:1px solid #d9e7ce!important;border-radius:10px!important;padding:8px 10px!important;margin-top:8px!important;color:var(--gc-muted)!important}',
+      '.card-chips{border-top:1px solid #eee4d2!important;margin-top:13px!important;padding-top:12px!important}.cc{border-radius:999px!important;font-weight:900!important}',
+      '.card-menu-btn{background:rgba(255,253,248,.96)!important;color:var(--gc-forest)!important;border-radius:999px!important;box-shadow:0 8px 20px rgba(33,74,50,.16)!important}',
+      '.overlay{background:rgba(33,74,50,.72)!important}.modal{background:var(--gc-paper)!important;border:1px solid var(--gc-line)!important;border-radius:10px!important;box-shadow:0 30px 90px rgba(20,43,28,.32)!important}',
+      '.m-info{background:linear-gradient(180deg,#fffdf8,#fbf6ec)!important;border-bottom:1px solid var(--gc-line)!important}.m-info h2{font-family:"Frank Ruhl Libre",serif!important;color:var(--gc-forest)!important;font-size:2.05rem!important}',
+      '.mseason,.msec,.nbox,.cbox,.cl-progress-box,.cl-item{border-radius:10px!important;border-color:var(--gc-line)!important}.msec-ttl{color:var(--gc-clay)!important;font-weight:900!important}',
+      '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}',
+      '@media(max-width:900px){.layout{padding:0 14px 24px!important;gap:16px!important}.sidebar{height:auto!important}.grid{grid-template-columns:1fr!important}.card-img{height:230px!important}.header{padding:16px 18px!important}.header-title h1{font-size:1.75rem!important}}'
+    ].join('');
     document.head.appendChild(style);
   }
   function replaceMainList() {
