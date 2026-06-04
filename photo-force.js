@@ -1,6 +1,27 @@
 (function () {
-  var VERSION = 'card-wiki-timeout-no-loader-20260521';
+  var VERSION = 'fast-batch-card-photos-20260603';
+  var STORE_KEY = 'gan_chacham_photo_map_' + VERSION;
   var BAD_URL = /loremflickr|staticflickr|flickr\.com|flickr\.net|placekitten|defaultImage|logo|icon|map|diagram|symbol|\.svg/i;
+  var FALLBACKS = {
+    fruit: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Plum_tree_with_fruit.jpg',
+    citrus: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Plum_tree_with_fruit.jpg',
+    ornamental: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Usamljeni_jasen_-_panoramio_%28cropped%29.jpg/1280px-Usamljeni_jasen_-_panoramio_%28cropped%29.jpg',
+    tropical: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Trientalis_borealis_1177.JPG/1280px-Trientalis_borealis_1177.JPG',
+    bush: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Cytisus_scoparius2.jpg/1280px-Cytisus_scoparius2.jpg',
+    lawn: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Poa_annua.jpg/1280px-Poa_annua.jpg',
+    default: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Ranunculus_repens_1_%28cropped%29.JPG/1280px-Ranunculus_repens_1_%28cropped%29.JPG'
+  };
+
+  var photoMap = {};
+  var pendingPages = {};
+  var queued = false;
+  var activeBatch = false;
+
+  try {
+    photoMap = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {};
+  } catch (e) {
+    photoMap = {};
+  }
 
   function plants() {
     try { return typeof P !== 'undefined' && Array.isArray(P) ? P : []; }
@@ -29,7 +50,18 @@
     return /^https?:\/\//i.test(url) && !BAD_URL.test(url);
   }
 
-  async function json(url) {
+  function fallback(p) {
+    if (!p) return FALLBACKS.default;
+    if (p.bg && FALLBACKS[p.bg]) return FALLBACKS[p.bg];
+    if (p.type && FALLBACKS[p.type]) return FALLBACKS[p.type];
+    return FALLBACKS.default;
+  }
+
+  function saveMap() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(photoMap)); } catch (e) {}
+  }
+
+  async function jsonWithTimeout(url) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 4500) : null;
     try {
@@ -41,113 +73,87 @@
     }
   }
 
-  async function wikiImage(p) {
-    var page = pageName(p);
-    if (!page) return null;
-    var key = 'card_wiki_photo_' + VERSION + '_' + page;
-    try {
-      if (typeof imgCache !== 'undefined' && imgCache[key] !== undefined) return safe(imgCache[key]) ? imgCache[key] : null;
-    } catch (e) {}
-
-    var url = null;
-    try {
-      var data = await json('https://en.wikipedia.org/w/api.php?action=query&titles=' + encodeURIComponent(page) + '&prop=pageimages&pithumbsize=1000&format=json&origin=*');
-      var first = Object.values(data.query && data.query.pages || {})[0];
-      var candidate = first && first.thumbnail && first.thumbnail.source;
-      if (safe(candidate)) url = candidate;
-    } catch (e) {}
-
-    try { if (typeof imgCache !== 'undefined') imgCache[key] = url; } catch (e) {}
-    return url;
-  }
-
-  async function commonsImage(p) {
-    var page = pageName(p);
-    if (!page) return null;
-    var query = page + ' tree plant leaves foliage';
-    var key = 'card_commons_photo_' + VERSION + '_' + page;
-    try {
-      if (typeof imgCache !== 'undefined' && imgCache[key] !== undefined) return safe(imgCache[key]) ? imgCache[key] : null;
-    } catch (e) {}
-
-    var url = null;
-    try {
-      var search = await json('https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch=' + encodeURIComponent(query) + '&prop=imageinfo&iiprop=url|mime&iiurlwidth=1000&format=json&origin=*');
-      var pages = Object.values(search.query && search.query.pages || {});
-      for (var i = 0; i < pages.length; i++) {
-        var info = pages[i].imageinfo && pages[i].imageinfo[0];
-        var candidate = info && (info.thumburl || info.url);
-        var title = pages[i].title || '';
-        if (/^image\/(jpeg|png|webp)/i.test(info && info.mime || '') && safe(candidate) && !/logo|icon|diagram|map|symbol|svg|pdf/i.test(title)) {
-          url = candidate;
-          break;
-        }
-      }
-    } catch (e) {}
-
-    try { if (typeof imgCache !== 'undefined') imgCache[key] = url; } catch (e) {}
-    return url;
-  }
-
-  async function resolve(p) {
-    if (!p) return null;
-    var customKey = 'custom_' + p.id + '_medium';
-    try {
-      var custom = typeof imgCache !== 'undefined' ? imgCache[customKey] : null;
-      if (safe(custom)) return custom;
-    } catch (e) {}
-    return await wikiImage(p) || await commonsImage(p);
-  }
-
-  function removeEmpty(box) {
-    if (!box) return;
-    box.classList.remove('no-real-photo');
-    box.querySelectorAll('.card-photo-empty').forEach(function (node) { node.remove(); });
-  }
-
-  function markEmpty(box) {
-    if (!box) return;
-    box.classList.add('no-real-photo');
-    if (!box.querySelector('.card-photo-empty')) {
-      var empty = document.createElement('div');
-      empty.className = 'card-photo-empty';
-      empty.textContent = 'אין תמונה';
-      box.appendChild(empty);
-    }
-  }
-
   function show(img, url) {
-    if (!img) return;
+    if (!img || !safe(url)) return;
     var box = img.closest('.card-img');
-    img.classList.remove('show');
-    if (!url) {
-      img.removeAttribute('src');
-      markEmpty(box);
-      return;
+    if (box) {
+      box.classList.remove('no-real-photo');
+      box.querySelectorAll('.card-photo-empty').forEach(function (node) { node.remove(); });
     }
-    removeEmpty(box);
-    img.style.display = 'block';
-    img.onload = function () { img.classList.add('show'); removeEmpty(box); };
-    img.onerror = function () { img.classList.remove('show'); markEmpty(box); };
+    if (img.getAttribute('src') === url && img.classList.contains('show')) return;
+    img.onload = function () { img.classList.add('show'); };
+    img.onerror = function () { img.classList.remove('show'); };
     img.src = url;
     if (img.complete && img.naturalWidth > 0) img.classList.add('show');
   }
 
-  async function repairCard(id) {
+  function hideLoaders() {
+    document.querySelectorAll('.photo-loading,.photo-loading.show').forEach(function (loader) {
+      loader.classList.remove('show');
+      loader.style.display = 'none';
+      loader.style.opacity = '0';
+    });
+  }
+
+  function applyCard(id) {
     var p = byId(id);
     var img = document.getElementById('cimg-' + id);
-    var loader = document.getElementById('cload-' + id);
     if (!p || !img) return;
-    if (loader) loader.classList.remove('show');
-    var url = await resolve(p);
-    if (loader) loader.classList.remove('show');
-    show(img, url);
+
+    var page = pageName(p);
+    show(img, page && safe(photoMap[page]) ? photoMap[page] : fallback(p));
+
+    if (page && photoMap[page] === undefined) {
+      pendingPages[page] = true;
+      scheduleBatch();
+    }
   }
 
   function repairCards() {
+    hideLoaders();
     document.querySelectorAll('img.real-photo[id^="cimg-"]').forEach(function (img) {
-      repairCard(img.id.replace('cimg-', ''));
+      applyCard(img.id.replace('cimg-', ''));
     });
+  }
+
+  function scheduleBatch() {
+    if (queued || activeBatch) return;
+    queued = true;
+    setTimeout(runBatch, 120);
+  }
+
+  async function runBatch() {
+    queued = false;
+    var pages = Object.keys(pendingPages).filter(function (page) { return photoMap[page] === undefined; });
+    pendingPages = {};
+    if (!pages.length) return;
+    activeBatch = true;
+
+    try {
+      for (var i = 0; i < pages.length; i += 40) {
+        var chunk = pages.slice(i, i + 40);
+        var url = 'https://en.wikipedia.org/w/api.php?action=query&titles=' + encodeURIComponent(chunk.join('|')) + '&prop=pageimages&pithumbsize=1000&format=json&origin=*';
+        try {
+          var data = await jsonWithTimeout(url);
+          var resultPages = Object.values(data.query && data.query.pages || {});
+          resultPages.forEach(function (page) {
+            var source = page && page.thumbnail && page.thumbnail.source;
+            photoMap[page.title] = safe(source) ? source : null;
+          });
+          chunk.forEach(function (title) {
+            if (photoMap[title] === undefined) photoMap[title] = null;
+          });
+        } catch (e) {
+          chunk.forEach(function (title) {
+            if (photoMap[title] === undefined) photoMap[title] = null;
+          });
+        }
+      }
+      saveMap();
+    } finally {
+      activeBatch = false;
+      repairCards();
+    }
   }
 
   function hideModalPhotos() {
@@ -174,8 +180,7 @@
       '.card-img{background:#e6eddf!important}',
       '.card-img .real-photo.show{opacity:1!important;display:block!important}',
       '.photo-loading,.photo-loading.show{display:none!important;opacity:0!important}',
-      '.card-img.no-real-photo{display:flex!important;align-items:center!important;justify-content:center!important;background:#e6eddf!important}',
-      '.card-photo-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#38513d;font-size:.9rem;font-weight:800;background:#e6eddf;z-index:2}',
+      '.card-photo-empty{display:none!important}',
       '#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}',
       '#mPhotos *{display:none!important}'
     ].join('');
@@ -184,7 +189,9 @@
 
   function patchApis() {
     window.fetchWikiImg = function (name) {
-      return resolve(plants().find(function (p) { return p.name === name; }) || { name: name });
+      var p = plants().find(function (item) { return item.name === name; }) || { name: name };
+      var page = pageName(p);
+      return Promise.resolve(page && safe(photoMap[page]) ? photoMap[page] : fallback(p));
     };
     window.tryLoadImg = function (id, size, ok, fail) {
       var p = byId(id);
@@ -192,14 +199,15 @@
         if (fail) fail();
         return;
       }
-      resolve(p).then(function (url) {
-        if (url && ok) ok(url);
-        else if (fail) fail();
-      }).catch(function () {
-        if (fail) fail();
-      });
+      var page = pageName(p);
+      var url = page && safe(photoMap[page]) ? photoMap[page] : fallback(p);
+      if (ok) ok(url);
+      if (page && photoMap[page] === undefined) {
+        pendingPages[page] = true;
+        scheduleBatch();
+      }
     };
-    window.loadCardImg = function (id) { repairCard(id); };
+    window.loadCardImg = function (id) { applyCard(id); };
   }
 
   function patchOpenModal() {
@@ -225,8 +233,7 @@
     window.__photoForceRender = true;
     window.render = function () {
       var result = old.apply(this, arguments);
-      setTimeout(repairCards, 120);
-      setTimeout(repairCards, 1200);
+      setTimeout(repairCards, 60);
       return result;
     };
   }
@@ -235,7 +242,7 @@
     var area = document.getElementById('pa');
     if (!area || window.__photoForceObserver) return;
     window.__photoForceObserver = true;
-    new MutationObserver(function () { setTimeout(repairCards, 120); }).observe(area, { childList: true, subtree: true });
+    new MutationObserver(function () { setTimeout(repairCards, 60); }).observe(area, { childList: true, subtree: true });
   }
 
   function ready() {
@@ -246,6 +253,7 @@
   var tries = 0;
   function boot() {
     installCss();
+    hideLoaders();
     hideModalPhotos();
     if (!ready()) {
       if (++tries < 240) setTimeout(boot, 100);
@@ -256,11 +264,7 @@
     patchRender();
     observe();
     repairCards();
-    setTimeout(repairCards, 1200);
-    setInterval(function () {
-      patchOpenModal();
-      hideModalPhotos();
-    }, 1500);
+    setInterval(hideLoaders, 1200);
     window.__photoForceVersion = VERSION;
   }
 
