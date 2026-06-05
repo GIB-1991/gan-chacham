@@ -1,319 +1,242 @@
-/* Modern catalog-inspired garden theme - stronger visual layer */
+/* Gardenia-inspired visual layer for Gan Chacham */
 :root{
-  --catalog-green:#24442f;
-  --catalog-green-2:#315a3f;
-  --catalog-leaf:#6f8f4d;
-  --catalog-moss:#dce7cb;
-  --catalog-paper:#fffdf7;
-  --catalog-cream:#f4efe4;
-  --catalog-warm:#ead8bd;
-  --catalog-soil:#9b603b;
-  --catalog-gold:#d09a2f;
-  --catalog-ink:#243127;
-  --catalog-muted:#6c7469;
-  --catalog-line:#ded6c8;
-  --catalog-shadow:0 14px 38px rgba(37,54,41,.13);
+  --gd-green:#17452d;
+  --gd-green-2:#28633f;
+  --gd-leaf:#76a45c;
+  --gd-cream:#f8f3e9;
+  --gd-paper:#fffefa;
+  --gd-line:#e5dac8;
+  --gd-clay:#a66b43;
+  --gd-gold:#d3a23a;
+  --gd-ink:#203226;
+  --gd-muted:#6b776c;
 }
-
 *{letter-spacing:0!important}
-html{background:#f4efe4}
-body{
-  background:
-    linear-gradient(180deg,#fbf8f0 0,#f4efe4 310px,#edf3e5 100%);
-  color:var(--catalog-ink);
-}
-#app-shell{min-height:100vh;background:transparent}
+html,body{background:#f8f3e9!important;color:var(--gd-ink)!important}
+#app-shell{background:linear-gradient(180deg,#fffefa 0,#f7f1e7 265px,#edf5e8 100%)!important;min-height:100vh!important}
 
+/* ===== Gardenia-style two-row header ===== */
 .header{
-  background:var(--catalog-paper)!important;
-  border-bottom:1px solid var(--catalog-line)!important;
-  padding:16px 34px 15px!important;
-  box-shadow:0 2px 18px rgba(36,68,47,.08)!important;
-  position:relative;
-  overflow:hidden;
-}
-.header::after{
-  content:''!important;
-  position:absolute!important;
-  inset:auto 0 0!important;
-  height:5px!important;
-  background:linear-gradient(90deg,var(--catalog-green),var(--catalog-leaf),var(--catalog-gold),var(--catalog-soil))!important;
-  pointer-events:none!important;
-}
-.header-row{
-  max-width:1440px;
-  margin:0 auto;
-  align-items:center!important;
-  gap:18px;
-}
-.header-title h1{
-  color:var(--catalog-green)!important;
-  font-family:'Frank Ruhl Libre',serif!important;
-  font-size:2rem!important;
-  line-height:1.03!important;
-}
-.header-title h1 span{color:var(--catalog-soil)!important}
-.header-title p{
-  color:var(--catalog-muted)!important;
-  font-size:.9rem!important;
-  margin-top:7px!important;
-}
-.header-meta{gap:11px!important;align-items:center!important}
-#user-header-info>div{
-  background:var(--catalog-green)!important;
-  border-radius:999px!important;
-  padding:5px 8px 5px 12px!important;
-  box-shadow:0 7px 20px rgba(36,68,47,.16);
-}
-.month-pill{
-  background:#f7eddc!important;
-  border:1px solid #e9d8bf!important;
-  color:var(--catalog-green)!important;
-  border-radius:999px!important;
-  padding:8px 17px!important;
-  font-weight:800!important;
-}
-.notif-bell{
-  background:var(--catalog-green)!important;
-  border:1px solid var(--catalog-green)!important;
-  color:#fff!important;
-  border-radius:999px!important;
-  box-shadow:0 8px 18px rgba(36,68,47,.22)!important;
-}
-.notif-bell:hover{background:var(--catalog-green-2)!important;transform:translateY(-1px)}
-.notif-badge{background:var(--catalog-soil)!important;border-color:var(--catalog-paper)!important}
-
-.alerts-bar{
-  max-width:1440px!important;
-  margin:18px auto 0!important;
-  background:var(--catalog-green)!important;
-  color:#fff!important;
+  background:var(--gd-paper)!important;
   border:0!important;
-  border-radius:8px!important;
-  padding:11px 18px!important;
-  box-shadow:var(--catalog-shadow)!important;
-}
-.alerts-label{color:#f6e7c8!important;font-weight:900!important;text-transform:none!important;font-size:.8rem!important}
-.no-tasks{color:rgba(255,255,255,.78)!important}
-.chip{border-radius:999px!important;font-weight:900!important;padding:6px 13px!important;border-width:1px!important}
-.chip.prune{background:#fff5d8!important;color:#6e4b12!important;border-color:#e3c471!important}
-.chip.fert{background:#eef7e1!important;color:#345329!important;border-color:#c8dda9!important}
-.chip.supp{background:#eef5f6!important;color:#2e5360!important;border-color:#bdd4d8!important}
-
-.layout{
-  max-width:1440px!important;
-  margin:20px auto 0!important;
-  grid-template-columns:292px 1fr!important;
-  min-height:calc(100vh - 178px)!important;
-  gap:22px!important;
-  padding:0 24px 34px!important;
-}
-.sidebar{
-  background:rgba(255,253,247,.98)!important;
-  border:1px solid var(--catalog-line)!important;
-  border-radius:8px!important;
-  height:calc(100vh - 204px)!important;
-  padding:18px 14px!important;
-  box-shadow:0 12px 34px rgba(37,54,41,.1)!important;
-}
-.sb-sec{margin-bottom:19px!important}
-.sb-ttl{
-  color:var(--catalog-soil)!important;
-  font-size:.74rem!important;
-  text-transform:none!important;
-  font-weight:900!important;
-  padding:0 7px!important;
-  margin-bottom:8px!important;
-}
-.sb-inp{
-  border-color:var(--catalog-line)!important;
-  border-radius:8px!important;
-  background:#fff!important;
-  color:var(--catalog-ink)!important;
-  padding:10px 12px!important;
-  font-weight:700!important;
-}
-.sb-inp:focus{border-color:var(--catalog-leaf)!important;box-shadow:0 0 0 3px rgba(111,143,77,.18)!important}
-.flt{
-  border-radius:8px!important;
-  color:var(--catalog-ink)!important;
-  font-weight:800!important;
-  padding:10px 11px!important;
-  margin-bottom:4px!important;
-}
-.flt:hover{background:#f1e8d8!important}
-.flt.on{
-  background:var(--catalog-green)!important;
-  color:#fff!important;
-  box-shadow:0 10px 22px rgba(36,68,47,.2)!important;
-}
-.sb-badge{background:#efe4d2!important;color:var(--catalog-green)!important;font-weight:900!important}
-.flt.on .sb-badge{background:rgba(255,255,255,.2)!important;color:#fff!important}
-.divider{background:var(--catalog-line)!important;margin:14px 7px!important}
-
-.plants-area{background:transparent!important;padding:0!important}
-.floor-hdr{
-  color:var(--catalog-green)!important;
-  font-size:.93rem!important;
-  text-transform:none!important;
-  margin:4px 0 14px!important;
-  letter-spacing:0!important;
-}
-.floor-hdr::after{background:var(--catalog-line)!important}
-.grid{
-  grid-template-columns:repeat(auto-fill,minmax(270px,1fr))!important;
-  gap:20px!important;
-  margin-bottom:34px!important;
-}
-
-.card{
-  border-radius:8px!important;
-  border:1px solid var(--catalog-line)!important;
-  background:var(--catalog-paper)!important;
-  box-shadow:0 8px 22px rgba(37,54,41,.09)!important;
-  overflow:hidden!important;
-}
-.card:hover{
-  transform:translateY(-4px)!important;
-  border-color:#cabda9!important;
-  box-shadow:0 18px 42px rgba(37,54,41,.16)!important;
-}
-.card.alert{border-color:#d6b14e!important;box-shadow:0 10px 26px rgba(139,101,28,.16)!important}
-.card-img{
-  height:248px!important;
-  background:#dfe6d3!important;
-  border-bottom:1px solid #e8dfcf;
-}
-.real-photo{background:#dfe6d3!important;object-fit:cover!important}
-.real-photo.show{opacity:1!important}
-.real-photo.show + .img-bg{opacity:0!important}
-.photo-loading.show{background:rgba(36,68,47,.18)!important}
-
-.img-bg{
-  background-size:cover!important;
-  background-position:center!important;
-  background-repeat:no-repeat!important;
-  position:absolute!important;
-  inset:0!important;
-}
-.img-bg::before{
-  content:'';
-  position:absolute;
-  inset:0;
-  z-index:1;
-  background:linear-gradient(180deg,rgba(20,35,24,.05),rgba(20,35,24,.22));
-}
-.img-bg.fruit{background-image:url("https://loremflickr.com/900/650/fruit,tree,garden")!important}
-.img-bg.citrus{background-image:url("https://loremflickr.com/900/650/citrus,tree,orange")!important}
-.img-bg.ornamental{background-image:url("https://loremflickr.com/900/650/ornamental,plant,garden")!important}
-.img-bg.tropical{background-image:url("https://loremflickr.com/900/650/tropical,plant,garden")!important}
-.img-bg.bush{background-image:url("https://loremflickr.com/900/650/herb,shrub,garden")!important}
-.img-bg.lawn{background-image:url("https://loremflickr.com/900/650/lawn,grass,garden")!important}
-img[alt="מנגו"] + .img-bg{background-image:url("https://loremflickr.com/900/650/mango,tree")!important}
-img[alt="תאנה"] + .img-bg{background-image:url("https://loremflickr.com/900/650/fig,tree")!important}
-img[alt="שמיר"] + .img-bg{background-image:url("https://loremflickr.com/900/650/dill,herb")!important}
-img[alt="שסק"] + .img-bg{background-image:url("https://loremflickr.com/900/650/loquat,tree")!important}
-img[alt="ערבה בוכיה"] + .img-bg,
-img[alt="ערבה בוכייה"] + .img-bg{background-image:url("https://loremflickr.com/900/650/weeping,willow,tree")!important}
-img[alt="לימון ננסי"] + .img-bg{background-image:url("https://loremflickr.com/900/650/lemon,tree")!important}
-img[alt="תפוז טבורי"] + .img-bg{background-image:url("https://loremflickr.com/900/650/orange,tree")!important}
-img[alt="אבוקדו"] + .img-bg{background-image:url("https://loremflickr.com/900/650/avocado,tree")!important}
-img[alt="רימון"] + .img-bg{background-image:url("https://loremflickr.com/900/650/pomegranate,tree")!important}
-img[alt="זית"] + .img-bg{background-image:url("https://loremflickr.com/900/650/olive,tree")!important}
-img[alt="ענב"] + .img-bg{background-image:url("https://loremflickr.com/900/650/grape,vine")!important}
-img[alt="בננה"] + .img-bg{background-image:url("https://loremflickr.com/900/650/banana,plant")!important}
-img[alt="נענע"] + .img-bg{background-image:url("https://loremflickr.com/900/650/mint,herb")!important}
-img[alt="רוזמרין"] + .img-bg{background-image:url("https://loremflickr.com/900/650/rosemary,herb")!important}
-img[alt="לבנדר"] + .img-bg{background-image:url("https://loremflickr.com/900/650/lavender,plant")!important}
-img[alt="בזיליקום"] + .img-bg{background-image:url("https://loremflickr.com/900/650/basil,herb")!important}
-.plant-emoji-big{
+  box-shadow:0 10px 34px rgba(23,69,45,.08)!important;
+  padding:0!important;
   position:relative!important;
-  z-index:2!important;
-  width:64px!important;
-  height:64px!important;
+  overflow:visible!important;
+}
+.header::before{
+  content:'כניסה לחשבון  |  הגינה שלי  |  מאמרי גינון  |  צור קשר';
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
-  border-radius:999px!important;
-  background:rgba(255,253,247,.9)!important;
-  color:var(--catalog-green)!important;
+  height:34px!important;
+  background:#f4ecdf!important;
+  border-bottom:1px solid var(--gd-line)!important;
+  color:#7b6f60!important;
+  font-size:.78rem!important;
+  font-weight:800!important;
+}
+.header::after{
+  content:'מאתר צמחים   גידול וטיפול   רעיונות שתילה   עצי פרי   צמחי נוי   לוח טיפולים';
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:48px!important;
+  background:var(--gd-green)!important;
+  color:#fff!important;
+  border-top:1px solid rgba(255,255,255,.12)!important;
+  border-bottom:5px solid var(--gd-gold)!important;
+  font-size:.93rem!important;
+  font-weight:900!important;
+  word-spacing:18px!important;
+  white-space:nowrap!important;
+}
+.header-row{
+  max-width:1480px!important;
+  min-height:86px!important;
+  margin:0 auto!important;
+  padding:0 34px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:24px!important;
+  direction:rtl!important;
+}
+.header-title{display:flex!important;flex-direction:column!important;align-items:flex-start!important;order:1!important}
+.header-title h1{
+  margin:0!important;
+  font-family:'Frank Ruhl Libre',serif!important;
+  color:var(--gd-green)!important;
   font-size:2.35rem!important;
-  box-shadow:0 8px 22px rgba(0,0,0,.18)!important;
-  filter:none!important;
+  line-height:.95!important;
+  font-weight:900!important;
 }
-.size-tabs{display:none!important}
-.alert-dot{top:12px!important;left:12px!important;z-index:12!important}
-.card-menu-btn{
-  opacity:1!important;
-  top:10px!important;
-  right:10px!important;
-  background:rgba(255,253,247,.94)!important;
-  color:var(--catalog-green)!important;
+.header-title h1::first-line{font-size:2.35rem!important}
+.header-title h1 span{
+  display:block!important;
+  color:var(--gd-clay)!important;
+  font-size:1.75rem!important;
+  margin-top:7px!important;
+}
+.header-title p{
+  margin-top:9px!important;
+  color:var(--gd-muted)!important;
+  font-size:.9rem!important;
+  font-weight:800!important;
+}
+.header-meta{
+  order:2!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-start!important;
+}
+.month-pill{
+  height:42px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  background:#fff7e8!important;
+  color:var(--gd-green)!important;
+  border:1px solid #e6d2b4!important;
   border-radius:999px!important;
+  padding:0 18px!important;
+  font-weight:900!important;
+  box-shadow:none!important;
 }
-.card-ctx-menu{border-radius:8px!important;border-color:var(--catalog-line)!important}
+#user-header-info>div,.notif-bell{
+  background:var(--gd-green)!important;
+  border:1px solid var(--gd-green)!important;
+  color:#fff!important;
+  border-radius:999px!important;
+  box-shadow:0 10px 24px rgba(23,69,45,.2)!important;
+}
+.notif-bell:hover{background:var(--gd-green-2)!important;transform:translateY(-1px)!important}
+.notif-badge{background:var(--gd-clay)!important;border-color:var(--gd-paper)!important}
 
-.card-body{padding:16px 17px 18px!important}
+/* remove duplicate bars/floors */
+.alerts-bar,.floor-hdr,#floor-toggle{display:none!important}
+
+/* page layout */
+.layout{
+  max-width:1500px!important;
+  grid-template-columns:300px 1fr!important;
+  gap:30px!important;
+  margin:30px auto 0!important;
+  padding:0 34px 52px!important;
+}
+.sidebar{
+  background:rgba(255,254,250,.96)!important;
+  border:1px solid var(--gd-line)!important;
+  border-radius:18px!important;
+  box-shadow:0 18px 52px rgba(32,49,38,.12)!important;
+  padding:24px 18px!important;
+  height:calc(100vh - 250px)!important;
+}
+.sb-ttl{color:var(--gd-clay)!important;font-size:.78rem!important;font-weight:900!important;text-transform:none!important;margin-bottom:10px!important}
+.sb-inp{
+  height:48px!important;
+  background:#fff!important;
+  border:1px solid var(--gd-line)!important;
+  border-radius:14px!important;
+  color:var(--gd-ink)!important;
+  padding:0 16px!important;
+  font-weight:800!important;
+}
+.flt{
+  border-radius:14px!important;
+  padding:12px 14px!important;
+  margin-bottom:8px!important;
+  font-weight:900!important;
+  color:var(--gd-ink)!important;
+}
+.flt:hover{background:#f4eadb!important}
+.flt.on{background:var(--gd-green)!important;color:#fff!important;box-shadow:0 14px 30px rgba(23,69,45,.2)!important}
+.divider{background:var(--gd-line)!important;margin:18px 8px!important}
+
+/* catalog-like cards */
+.grid{grid-template-columns:repeat(auto-fill,minmax(315px,1fr))!important;gap:30px!important}
+.card{
+  position:relative!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:22px!important;
+  overflow:visible!important;
+  box-shadow:none!important;
+  min-height:500px!important;
+}
+.card.alert{border:0!important;box-shadow:none!important}
+.card:hover{transform:translateY(-6px)!important;box-shadow:none!important}
+.card-img{
+  height:340px!important;
+  border-radius:22px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(23,69,45,.12)!important;
+  box-shadow:0 18px 44px rgba(23,69,45,.16)!important;
+  background:#dfe9d8!important;
+}
+.card-img::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0) 48%,rgba(14,34,22,.58) 100%);
+  pointer-events:none;
+  z-index:3;
+}
+.real-photo{object-fit:cover!important;background:#dfe9d8!important}
+.card-img .real-photo.show{display:block!important;opacity:1!important;width:100%!important;height:100%!important;object-fit:cover!important}
+.photo-loading,.photo-loading.show,.card-photo-empty,.size-tabs{display:none!important}
+.alert-dot{top:18px!important;left:18px!important;z-index:8!important}
+.card-menu-btn{
+  top:16px!important;
+  right:16px!important;
+  z-index:9!important;
+  width:40px!important;
+  height:40px!important;
+  background:rgba(255,254,250,.96)!important;
+  color:var(--gd-green)!important;
+  border-radius:999px!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.18)!important;
+}
+.card-body{
+  position:relative!important;
+  margin:-82px 18px 0!important;
+  background:var(--gd-paper)!important;
+  border:1px solid var(--gd-line)!important;
+  border-radius:20px!important;
+  box-shadow:0 18px 44px rgba(32,49,38,.16)!important;
+  padding:22px 20px 20px!important;
+  min-height:235px!important;
+  z-index:5!important;
+}
 .card-name{
   font-family:'Frank Ruhl Libre',serif!important;
-  font-size:1.36rem!important;
-  line-height:1.1!important;
-  color:var(--catalog-green)!important;
-  margin-bottom:5px!important;
-}
-.card-type{
-  background:#f0e7d8!important;
-  color:var(--catalog-soil)!important;
-  border-radius:999px!important;
+  color:var(--gd-green)!important;
+  font-size:1.72rem!important;
+  line-height:1!important;
+  margin:0 0 10px!important;
   font-weight:900!important;
-  padding:3px 11px!important;
 }
-.info-tags{gap:6px!important;margin:10px 0 9px!important}
-.itag,.hm-chip,.age-badge,.cc{border-radius:999px!important;font-weight:900!important}
-.care-row{color:var(--catalog-muted)!important;line-height:1.48!important;font-size:.82rem!important}
-.card-chips{border-top-color:#ece1d2!important;gap:7px!important;margin-top:12px!important;padding-top:12px!important}
+.card-type{background:#efe1cf!important;color:var(--gd-clay)!important;border-radius:999px!important;padding:5px 14px!important;font-weight:900!important;font-size:.82rem!important;margin-bottom:12px!important}
+.care-row{background:transparent!important;border:0!important;border-top:1px solid #eee5d6!important;border-radius:0!important;padding:10px 0!important;margin:0!important;color:var(--gd-muted)!important;font-size:.84rem!important;line-height:1.35!important}
+.card-chips{border-top:1px solid #eee5d6!important;margin-top:4px!important;padding-top:12px!important}
+.cc{border-radius:999px!important;font-weight:900!important;padding:5px 11px!important}
 
-.overlay{background:rgba(36,68,47,.74)!important}
-.modal{
-  border-radius:8px!important;
-  border:1px solid var(--catalog-line)!important;
-  background:var(--catalog-paper)!important;
-  box-shadow:0 32px 90px rgba(0,0,0,.35)!important;
-}
-.m-photos{height:280px!important}
-.m-slot-real{object-fit:cover!important;filter:saturate(1.05) contrast(1.02)!important}
-.m-close,.np-close{border-radius:999px!important;background:rgba(255,253,247,.95)!important;color:var(--catalog-green)!important}
-.m-info h2{color:var(--catalog-green)!important;font-size:1.95rem!important}
-.m-info .sub{color:var(--catalog-muted)!important}
-.mseason,.msec,.nbox,.cbox,.age-editor,.orla-info,.cl-progress-box,.cl-progress{border-radius:8px!important}
-.mseason.w{background:#edf5f6!important;border-color:#c5d9dd!important}
-.mseason.s{background:#fff4d7!important;border-color:#e6ca7e!important}
-.msec-ttl{color:var(--catalog-soil)!important;text-transform:none!important}
-.irow{color:var(--catalog-muted)!important}
-.ilabel{color:var(--catalog-green)!important}
-.edit-btn,.reset-btn,.delete-plant-btn,.edit-field,.edit-save-btn,.edit-cancel-btn{border-radius:8px!important}
-.edit-save-btn,.btn-save-img,.btn-sub{background:var(--catalog-green)!important}
-
-.notif-panel,.pe-panel,.ap-panel{background:var(--catalog-paper)!important}
-.np-hdr,.pe-hdr{background:var(--catalog-green)!important}
-.ni,.cl-item,.pe-opt,.ap-result-card{border-radius:8px!important}
-.cl-item{background:var(--catalog-paper)!important;border-color:var(--catalog-line)!important}
-.cl-item.done{background:#eef7e1!important}
-.cl-check{border-color:#c8d6ba!important}
-.cl-item.done .cl-check{background:var(--catalog-green)!important;border-color:var(--catalog-green)!important}
-
-.auth-box{border-radius:8px!important;box-shadow:0 24px 70px rgba(0,0,0,.28)!important}
-.auth-btn,.auth-inp{border-radius:8px!important}
-.auth-btn-primary{background:var(--catalog-green)!important}
+/* modal */
+.overlay{background:rgba(23,69,45,.76)!important}
+.modal{background:var(--gd-paper)!important;border:1px solid var(--gd-line)!important;border-radius:22px!important;box-shadow:0 34px 100px rgba(12,31,19,.35)!important}
+.m-info{background:#fffefa!important;border-bottom:1px solid var(--gd-line)!important;padding:30px 36px!important}
+.m-info h2{font-family:'Frank Ruhl Libre',serif!important;color:var(--gd-green)!important;font-size:2.4rem!important}
+.m-info .sub{color:var(--gd-muted)!important}
+#mPhotos,.modal .m-photos{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}
 
 @media(max-width:900px){
-  .header{padding:16px 18px!important}
-  .header-row{align-items:flex-start!important;gap:15px!important;flex-direction:column!important}
-  .header-meta{flex-wrap:wrap!important;justify-content:flex-start!important}
-  .layout{grid-template-columns:1fr!important;padding:0 14px 24px!important;gap:16px!important}
-  .sidebar{height:auto!important;position:static!important}
-  .alerts-bar{margin:14px 14px 0!important}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(235px,1fr))!important;gap:15px!important}
-  .card-img{height:220px!important}
-  .m-photos{height:190px!important}
+  .header-row{padding:16px 18px!important;min-height:auto!important;align-items:flex-start!important}
+  .header::before{height:auto!important;padding:8px 14px!important;font-size:.72rem!important;white-space:normal!important;text-align:center!important}
+  .header::after{height:auto!important;padding:12px 14px!important;white-space:normal!important;line-height:1.8!important;word-spacing:8px!important}
+  .header-title h1{font-size:1.9rem!important}.header-title h1 span{font-size:1.48rem!important}
+  .layout{grid-template-columns:1fr!important;padding:0 16px 28px!important;gap:18px!important}
+  .sidebar{height:auto!important;border-radius:16px!important}
+  .grid{grid-template-columns:1fr!important;gap:26px!important}
+  .card-img{height:300px!important}.card{min-height:470px!important}
 }
